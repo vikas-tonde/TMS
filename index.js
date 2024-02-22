@@ -5,7 +5,7 @@ import cors from 'cors';
 import mongoose from "mongoose";
 
 
-dotenv.config({ path: "dev.env" });
+dotenv.config({ path: ".env.dev" });
 
 mongoose.connect(process.env.MONGO_URL).then(() => {
     console.log("Database connected");
@@ -19,7 +19,5 @@ app.use(cors({
     origin: "*"
 }));
 app.use(bodyParser.json())
-
-
 
 app.listen(port, () => console.log(`Server is runnning on port : http://localhost:${port}`));
