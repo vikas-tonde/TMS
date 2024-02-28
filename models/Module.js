@@ -11,6 +11,7 @@ const ModuleSchema = new mongoose.Schema(
         },
         trainer: {
             type: mongoose.Schema.ObjectId
-        }
+        },
+        
     }
 );  

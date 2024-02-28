@@ -9,6 +9,9 @@ const AssessmentSchema = mongoose.Schema(
         date: {
             type: Date,
             required: true
+        },
+        totalMarks:{
+            type : Number
         }
     }
 );
