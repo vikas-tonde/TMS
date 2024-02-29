@@ -4,7 +4,11 @@ import bcrypt from "bcryptjs"
 
 const UserSchema = new mongoose.Schema(
     {
-        name: {
+        firstName: {
+            type: String,
+            require: true
+        },
+        lastName: {
             type: String,
             require: true
         },
@@ -47,8 +51,15 @@ const UserSchema = new mongoose.Schema(
             ref : ""
         }
 
-    }, { collection: "User", versionKey:false }
+    }, { collection: "User", versionKey:false, _id: false }
 );
+
+UserSchema.pre("save", async function (next) {
+    if(!this.isModified("password")) return next();
+    const salt = await bcrypt.genSalt(10);
+    this.password = await bcrypt.hash(this.password, salt);
+    next()
+})
 
 UserSchema.methods.isPasswordCorrect = async function(password){
     return await bcrypt.compare(password, this.password)

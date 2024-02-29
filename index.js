@@ -7,6 +7,7 @@ import helmet from "helmet";
 import cookieParser from "cookie-parser";
 
 import userRouter from "./routes/userRoutes.js"
+import adminRouter from "./routes/adminRoutes.js";
 
 dotenv.config({ path: ".env.dev" });
 
@@ -26,6 +27,7 @@ app.use(cors({
 app.use(bodyParser.json())
 
 app.use("/api/users", userRouter);
+app.use("/api/admin", adminRouter);
 
 
 app.listen(port, () => console.log(`Server is runnning on port : http://localhost:${port}`));

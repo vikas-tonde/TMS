@@ -3,9 +3,9 @@ import bcrypt from 'bcryptjs';
 import { validationResult } from 'express-validator'
 import { ApiResponse } from "../utils/ApiResponse.js";
 
-const generateAccessAndRefreshTokens = async(userId) =>{
+const generateAccessAndRefreshTokens = async(employeeId) =>{
     try {
-        const user = await User.findById(userId);
+        const user = await User.find({employeeId:employeeId});
         const accessToken = user.generateAccessToken();
         const refreshToken = user.generateRefreshToken();
 
@@ -41,12 +41,12 @@ const addUser = async (req, res, next) => {
 }
 
 const loginUser = async (req, res) =>{
-    const {email, password} = req.body;
+    const {employeeId, password} = req.body;
 
-    if (!email) {
+    if (!employeeId) {
         return res.status(400).json(new ApiResponse(400, {}, "username or email is required"));
     }    
-    const user = await User.findOne({email:email});
+    const user = await User.findOne({employeeId:employeeId});
 
     if (!user) {
         return res.status(404).json(new ApiResponse(404, {}, "User does not exist"));
@@ -58,9 +58,9 @@ const loginUser = async (req, res) =>{
         return res.status(401).json(new ApiResponse(401, {}, "Invalid user credentials"));
     }
 
-    const {accessToken, refreshToken} = await generateAccessAndRefreshTokens(user._id);
+    const {accessToken, refreshToken} = await generateAccessAndRefreshTokens(user.employeeId);
 
-    const loggedInUser = await User.findById(user._id).select("-password -refreshToken")
+    const loggedInUser = await User.find({employeeId:user.employeeId}).select("-password -refreshToken");
 
     const options = {
         httpOnly: true,
@@ -75,7 +75,7 @@ const loginUser = async (req, res) =>{
         new ApiResponse(
             200, 
             {
-                user: loggedInUser, accessToken, refreshToken
+                user: loggedInUser[0], accessToken, refreshToken
             },
             "User logged In Successfully"
         )
@@ -86,7 +86,7 @@ const loginUser = async (req, res) =>{
 const allUsers = async (req, res, next)=>{
     let users;
     try{
-        users = await User.find().select({password:0, _id:0});
+        users = await User.find().select({password:0});
         return res.status(200).json(new ApiResponse(200, users));
     }catch(e){
         return res.status(500).json(new ApiResponse(500, {}, "Something went wrong"));
