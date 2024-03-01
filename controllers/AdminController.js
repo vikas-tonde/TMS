@@ -81,10 +81,8 @@ const addBulkTestDataofUsers = async(req, res, next) => {
             var filePath = process.env.FILE_UPLOAD_LOCATION + req.file.filename;
             const excelData = await readExcelFile(filePath, ["Sheet1"]);
             let employeeIds = excelData.Sheet1.map(({employeeId})=>employeeId);
-            console.log("emp ids:",employeeIds);
             let presentIds= await User.distinct("employeeId",{employeeId: {$in: employeeIds} });
             let missingIds = employeeIds.filter(id => !presentIds.includes(id));
-            console.log("Missing Ids:",missingIds);
             if(missingIds.length){
                 return res.status(400).json(new ApiResponse(400, {}, missingIds.join(",")+ " users not present in system"));
             }
@@ -111,7 +109,9 @@ const addBulkTestDataofUsers = async(req, res, next) => {
                     await userAssessment.save(session);
                 });
                 session.commitTransaction();
+                fs.remove(filePath);
                 return res.status(200).json(new ApiResponse(200, assessment, "Assessment details are saved.")); 
+
             }
         }
     } 
