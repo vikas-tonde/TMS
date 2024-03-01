@@ -1,11 +1,11 @@
 import {User} from "../models/User.js";
 import bcrypt from 'bcryptjs';
-import { validationResult } from 'express-validator'
+import { validationResult } from 'express-validator';
 import { ApiResponse } from "../utils/ApiResponse.js";
 
 const generateAccessAndRefreshTokens = async(employeeId) =>{
     try {
-        const user = await User.find({employeeId:employeeId});
+        const user = (await User.find({employeeId:employeeId}))[0];
         const accessToken = user.generateAccessToken();
         const refreshToken = user.generateRefreshToken();
 
@@ -59,7 +59,9 @@ const loginUser = async (req, res) =>{
     }
 
     const {accessToken, refreshToken} = await generateAccessAndRefreshTokens(user.employeeId);
-
+    if((!accessToken && !refreshToken)){
+        return res.status(401).json(new ApiResponse(401, {}, "Invalid user credentials"));
+    }
     const loggedInUser = await User.find({employeeId:user.employeeId}).select("-password -refreshToken");
 
     const options = {

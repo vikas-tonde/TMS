@@ -1,17 +1,19 @@
 import mongoose from "mongoose";
 
-const AssessmentSchema = mongoose.Schema(
+const AssessmentSchema = new mongoose.Schema(
     {
-        module: {
-            type: mongoose.Schema.ObjectId,
+        moduleName: {
+            type: String,
             required: true
         },
         date: {
             type: Date,
             required: true
         },
-        totalMarks:{
-            type : Number
+        totalMarks: {
+            type: Number
         }
-    }
+    }, { collection: "Assessments", versionKey: false }
 );
+
+export const Assessment = mongoose.model('Assessments', AssessmentSchema);

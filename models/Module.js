@@ -13,5 +13,7 @@ const ModuleSchema = new mongoose.Schema(
             type: mongoose.Schema.ObjectId
         },
         
-    }
+    }, { collection: "Modules" , versionKey : false }
 );  
+
+export const Module = mongoose.model('Modules', ModuleSchema);
