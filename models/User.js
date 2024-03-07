@@ -6,16 +6,19 @@ const UserSchema = new mongoose.Schema(
     {
         firstName: {
             type: String,
-            require: true
+            require: true,
+            trim : true
         },
         lastName: {
             type: String,
-            require: true
+            require: true,
+            trim : true
         },
         email: {
             type: String,
             unique: true,
-            required: true
+            required: true,
+            trim : true
         },
         password: {
             type: String,
@@ -33,35 +36,38 @@ const UserSchema = new mongoose.Schema(
             unique: true,
             required: true
         },
-        location:{
-            type : String,
-            required : true
+        location: {
+            type: String,
+            required: true
         },
-        status:{
-            type : String
+        status: {
+            type: String
         },
-        remarks:{
-            type:String
+        remarks: {
+            type: String
         },
         refreshToken: {
             type: String
+        },
+        isActive: {
+            type: Boolean,
+            default: true
         }
-
-    }, { collection: "User", versionKey:false }
+    }, { collection: "User", versionKey: false }
 );
 
 UserSchema.pre("save", async function (next) {
-    if(!this.isModified("password")) return next();
+    if (!this.isModified("password")) return next();
     const salt = await bcrypt.genSalt(10);
     this.password = await bcrypt.hash(this.password, salt);
     next();
 });
 
-UserSchema.methods.isPasswordCorrect = async function(password){
+UserSchema.methods.isPasswordCorrect = async function (password) {
     return await bcrypt.compare(password, this.password);
 }
 
-UserSchema.methods.generateAccessToken = function(){
+UserSchema.methods.generateAccessToken = function () {
     return jwt.sign(
         {
             _id: this._id,
@@ -73,10 +79,10 @@ UserSchema.methods.generateAccessToken = function(){
         }
     );
 }
-UserSchema.methods.generateRefreshToken = function(){
+UserSchema.methods.generateRefreshToken = function () {
     return jwt.sign(
         {
-            _id: this._id,   
+            _id: this._id,
         },
         process.env.REFRESH_TOKEN_SECRET,
         {

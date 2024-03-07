@@ -4,8 +4,8 @@ import { ApiResponse } from "../utils/ApiResponse.js"
 
 export const authMiddleware = async (req, res, next) => {
     try {
-        const token = req.cookies?.accessToken || req.header("Authorization")?.replace("Bearer ", "")
-
+        console.log(req.header("accessToken"));
+        const token = req.header("accessToken") || req.header("Authorization")?.replace("Bearer ", "")
         if (!token) {
             return res.status(401).json(new ApiResponse(401, {}, "Unauthorized request"));
         }

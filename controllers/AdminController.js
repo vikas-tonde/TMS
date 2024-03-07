@@ -6,9 +6,10 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { User } from "../models/User.js";
 import { UserAssessment } from "../models/UserAssessment.js";
 import { Assessment } from "../models/Assessment.js";
+import { Batch } from "../models/Batch.js";
 
 
-const readExcelFile = async (filePath, sheetName)=>{
+const readExcelFile = async (filePath, sheetName) => {
     return excelToJson({
         sourceFile: filePath,
         header: {
@@ -31,22 +32,24 @@ const validateIncomingUsers = (incomingUsers) => {
     return true;
 }
 
-const addUsers = async (incomingUsers) => {
+const addUsers = async (incomingUsers, session) => {
     if (!validateIncomingUsers(incomingUsers)) {
         return false;
     }
     else {
-        let session = await mongoose.startSession();
         let usersToBeSaved = await incomingUsers.map((incomingUser) => {
             delete incomingUser.Name;
             return new User(incomingUser);
         });
         let result = await User.bulkSave(usersToBeSaved, { timestamps: false, session: session });
-        return result.insertedCount;
+        let insertedcount = result.insertedCount;
+        let insertedIds = result.insertedIds;
+        return { insertedcount, insertedIds };
     }
 }
 
 const bulkUsersFromFile = async (req, res, next) => {
+    let session = await mongoose.startSession();
     try {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -56,66 +59,78 @@ const bulkUsersFromFile = async (req, res, next) => {
             return res.status(400).json(new ApiResponse(400, {}, "No file is sent"));
         }
         else {
+
             var filePath = process.env.FILE_UPLOAD_LOCATION + req.file.filename;
             const excelData = await readExcelFile(filePath, ["Users"]);
-            let result = await addUsers(excelData.Users);
+            session.startTransaction();
+            let { insertedcount, insertedIds } = await addUsers(excelData.Users, session);
             fs.remove(filePath);
-
-            if (!result) {
+            let { batchName, location } = req.body;
+            if (!insertedcount) {
                 return res.status(500).json(new ApiResponse(500, {}, "Users not saved"));
             }
-            return res.status(200).json(new ApiResponse(200, result + " Users saved", "User uploading is finished"));
+            console.log(Object.values(insertedIds));
+            let trainees = Object.values(insertedIds);
+            let batch = new Batch({ batchName: batchName, location: location, isLatest: true, trainees: trainees });
+            await batch.save(session);
+            let oldBatch = await Batch.findOneAndUpdate({ location: location, isLatest: true }, { isLatest: false }, { new: true }).session(session);
+            session.commitTransaction();
+            return res.status(200).json(new ApiResponse(200, insertedcount + " Users saved", "User uploading is finished"));
         }
     }
     catch (e) {
+        session.abortTransaction();
+        console.log(e);
         res.status(500).json(new ApiResponse(500, {}, "Internal server error"));
     }
 }
 
-const addBulkTestDataofUsers = async(req, res, next) => {
+const addBulkTestDataofUsers = async (req, res, next) => {
+    let session = await mongoose.startSession();
     try {
         if (req.file?.filename == null || req.file?.filename == undefined) {
             return res.status(400).json(new ApiResponse(400, {}, "No file is sent"));
         }
-        else{
+        else {
             var filePath = process.env.FILE_UPLOAD_LOCATION + req.file.filename;
             const excelData = await readExcelFile(filePath, ["Sheet1"]);
-            let employeeIds = excelData.Sheet1.map(({employeeId})=>employeeId);
-            let presentIds= await User.distinct("employeeId",{employeeId: {$in: employeeIds} });
+            let employeeIds = excelData.Sheet1.map(({ employeeId }) => employeeId);
+            let presentIds = await User.distinct("employeeId", { employeeId: { $in: employeeIds } });
             let missingIds = employeeIds.filter(id => !presentIds.includes(id));
-            if(missingIds.length){
-                return res.status(400).json(new ApiResponse(400, {}, missingIds.join(",")+ " users not present in system"));
+            if (missingIds.length) {
+                return res.status(400).json(new ApiResponse(400, {}, missingIds.join(",") + " users not present in system"));
             }
-            else{
-                let session = await mongoose.startSession();
+            else {
+                
                 session.startTransaction();
                 let assessment = new Assessment(
                     {
                         moduleName: req.body.moduleName,
-                        date : req.body.date,
+                        date: req.body.date,
                         totalMarks: req.body.totalMarks
                     }
                 );
                 await assessment.save(session);
-                await excelData.Sheet1.map(async object=>{
-                    let user = await User.findOne({employeeId: object.employeeId});
+                await excelData.Sheet1.map(async object => {
+                    let user = await User.findOne({ employeeId: object.employeeId });
                     let userAssessment = new UserAssessment(
                         {
-                            userRef : user._id,
-                            assessmentRef : assessment._id,
-                            marksObtained : object.marks
+                            userRef: user._id,
+                            assessmentRef: assessment._id,
+                            marksObtained: object.marks
                         }
                     );
                     await userAssessment.save(session);
                 });
                 session.commitTransaction();
                 fs.remove(filePath);
-                return res.status(200).json(new ApiResponse(200, assessment, "Assessment details are saved.")); 
+                return res.status(200).json(new ApiResponse(200, assessment, "Assessment details are saved."));
 
             }
         }
-    } 
+    }
     catch (e) {
+        session.abortTransaction()
         console.log(e);
         res.status(500).json(new ApiResponse(500, {}, "Internal server error"));
     }
