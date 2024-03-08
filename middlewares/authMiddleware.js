@@ -4,8 +4,7 @@ import { ApiResponse } from "../utils/ApiResponse.js"
 
 export const authMiddleware = async (req, res, next) => {
     try {
-        console.log(req.header("accessToken"));
-        const token = req.header("accessToken") || req.header("Authorization")?.replace("Bearer ", "")
+        const token = req.cookies?.accessToken || req.header("Authorization")?.replace("Bearer ", "")
         if (!token) {
             return res.status(401).json(new ApiResponse(401, {}, "Unauthorized request"));
         }
@@ -16,7 +15,7 @@ export const authMiddleware = async (req, res, next) => {
             return res.status(401).json(new ApiResponse(401, {}, "Invalid Access Token"));
         }
         req.user = user;
-        next()
+        next();
     } catch (error) {
         return res.status(401).json(new ApiResponse(401, {}, error?.message || "Invalid Access Token"));
     }

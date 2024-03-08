@@ -2,7 +2,6 @@ import { ApiResponse } from "../utils/ApiResponse.js"
 
 export const adminAuthMiddleware = async (req, res, next) => {
     try {
-        console.log(req.user);
         if (req.user.role !== 'Admin') {
             return res.status(401).json(new ApiResponse(401, {}, "Unauthorized request"));
         }

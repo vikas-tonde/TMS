@@ -66,15 +66,14 @@ const loginUser = async (req, res) =>{
 
     const options = {
         httpOnly: true,
-        secure: true,
-        sameSite: "none",
-        domain : "10.0.2.216",
         path : "/"
     }
-    res.set("accessToken", accessToken);
-    res.set("refreshToken", refreshToken);
+    // res.set("accessToken", accessToken);
+    // res.set("refreshToken", refreshToken);
 
     return res
+    .cookie("accessToken", accessToken, options)
+    .cookie("refreshToken", refreshToken, options)
     .status(200)
     .json(
         new ApiResponse(
