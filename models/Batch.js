@@ -19,8 +19,7 @@ const BatchSchema = new mongoose.Schema(
         currentTraining: {
             type: String,
             trim: true
-        }
-        ,
+        },
         trainees: [
             {
                 type: mongoose.Schema.Types.ObjectId,

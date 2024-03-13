@@ -1,15 +1,14 @@
-import express from "express";
-import dotenv from "dotenv";
 import bodyParser from "body-parser";
-import cors from 'cors';
-import mongoose from "mongoose";
-import helmet from "helmet";
 import cookieParser from "cookie-parser";
-import fs from 'fs';
-import https from 'https';
+import cors from 'cors';
+import dotenv from "dotenv";
+import express from "express";
+import helmet from "helmet";
+import mongoose from "mongoose";
+import morgan from "morgan";
 
-import userRouter from "./routes/userRoutes.js"
 import adminRouter from "./routes/adminRoutes.js";
+import userRouter from "./routes/userRoutes.js";
 
 dotenv.config({ path: ".env.dev" });
 
@@ -24,10 +23,11 @@ app.use(cookieParser());
 const port = process.env.PORT || 5000;
 
 app.use(cors({
-    credentials : true,
+    credentials: true,
     origin: process.env.CORS_ORIGIN,
-    allowedHeaders : ["Origin", "X-Requested-With", "Content-Type", "Accept", "Authorization"]
+    allowedHeaders: ["Origin", "X-Requested-With", "Content-Type", "Accept", "Authorization"]
 }));
+app.use(morgan('dev'));
 
 // app.use((req, res, next) => {
 //     res.header("Access-Control-Allow-Origin", process.env.CORS_ORIGIN),
@@ -52,7 +52,7 @@ mongoose.connect(process.env.MONGO_URL).then((con) => {
     console.log(`Database connected on Host: ${con.connection.host}`);
     app.listen(port, () => console.log(`Server is runnning on port : http://localhost:${port}`));
 })
-    .catch((err) => {
-        console.log("MONGO db connection failed !!! ", err);
-        throw err;
-    });
+.catch((err) => {
+    console.log("MONGO db connection failed !!! ", err);
+    throw err;
+});

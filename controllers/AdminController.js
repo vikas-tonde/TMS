@@ -1,12 +1,12 @@
 import excelToJson from "convert-excel-to-json";
+import { validationResult } from 'express-validator';
 import * as fs from 'fs-extra';
 import mongoose from "mongoose";
-import { validationResult } from 'express-validator';
-import { ApiResponse } from "../utils/ApiResponse.js";
-import { User } from "../models/User.js";
-import { UserAssessment } from "../models/UserAssessment.js";
 import { Assessment } from "../models/Assessment.js";
 import { Batch } from "../models/Batch.js";
+import { User } from "../models/User.js";
+import { UserAssessment } from "../models/UserAssessment.js";
+import { ApiResponse } from "../utils/ApiResponse.js";
 
 
 const readExcelFile = async (filePath, sheetName) => {
@@ -136,7 +136,30 @@ const addBulkTestDataofUsers = async (req, res, next) => {
     }
 }
 
+const allUsers = async (req, res, next)=>{
+    let users;
+    try{
+        let {location} = req.params;
+        users = await User.find({role: "Trainee", isActive: true, location:location}).select("-password -refreshToken -isActive");
+        return res.status(200).json(new ApiResponse(200, users));
+    }catch(e){
+        return res.status(500).json(new ApiResponse(500, {}, "Something went wrong"));
+    }
+}
+
+const getAllBatches = async(req, res)=>{
+    try {
+        let batches = await Batch.find({});
+        return res.status(200).json(new ApiResponse(200, batches));
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json(new ApiResponse(500, {}, "Something went wrong"));
+    }
+}
+
 export {
     bulkUsersFromFile,
-    addBulkTestDataofUsers
-}
+    addBulkTestDataofUsers,
+    allUsers,
+    getAllBatches
+};
