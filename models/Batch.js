@@ -20,10 +20,20 @@ const BatchSchema = new mongoose.Schema(
             type: String,
             trim: true
         },
+        isActive: {
+            type: Boolean,
+            default: true
+        },
         trainees: [
             {
                 type: mongoose.Schema.Types.ObjectId,
                 ref: "User"
+            }
+        ],
+        assessments: [
+            {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: "Assessments"
             }
         ]
     }, { collection: "Batch", versionKey: false }

@@ -13,7 +13,7 @@ const UserAssessmentSchema = new mongoose.Schema(
             ref : "Assessments"
         },
         marksObtained :{
-            type : String,
+            type : Number,
             require : true
         }
     }, {collection : "UsersAssessments", versionKey: false}

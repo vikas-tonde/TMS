@@ -32,13 +32,14 @@ const validateIncomingUsers = (incomingUsers) => {
     return true;
 }
 
-const addUsers = async (incomingUsers, session) => {
+const addUsers = async (incomingUsers, session, batchId) => {
     if (!validateIncomingUsers(incomingUsers)) {
         return false;
     }
     else {
         let usersToBeSaved = await incomingUsers.map((incomingUser) => {
             delete incomingUser.Name;
+            incomingUser.batch = batchId;
             return new User(incomingUser);
         });
         let result = await User.bulkSave(usersToBeSaved, { timestamps: false, session: session });
@@ -59,19 +60,19 @@ const bulkUsersFromFile = async (req, res, next) => {
             return res.status(400).json(new ApiResponse(400, {}, "No file is sent"));
         }
         else {
-
+            session.startTransaction();
             var filePath = process.env.FILE_UPLOAD_LOCATION + req.file.filename;
             const excelData = await readExcelFile(filePath, ["Users"]);
-            session.startTransaction();
-            let { insertedcount, insertedIds } = await addUsers(excelData.Users, session);
-            fs.remove(filePath);
             let { batchName, location } = req.body;
+            let batch = new Batch({ batchName: batchName, location: location, isLatest: true });
+            let { insertedcount, insertedIds } = await addUsers(excelData.Users, session, batch._id);
+            fs.remove(filePath);
             if (!insertedcount) {
                 return res.status(500).json(new ApiResponse(500, {}, "Users not saved"));
             }
             console.log(Object.values(insertedIds));
             let trainees = Object.values(insertedIds);
-            let batch = new Batch({ batchName: batchName, location: location, isLatest: true, trainees: trainees });
+            batch.trainees = trainees;
             await batch.save(session);
             let oldBatch = await Batch.findOneAndUpdate({ location: location, isLatest: true }, { isLatest: false }, { new: true }).session(session);
             session.commitTransaction();
@@ -88,6 +89,10 @@ const bulkUsersFromFile = async (req, res, next) => {
 const addBulkTestDataofUsers = async (req, res, next) => {
     let session = await mongoose.startSession();
     try {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json(new ApiResponse(400, { errors: errors.array() }, "Errors in request"));
+        }
         if (req.file?.filename == null || req.file?.filename == undefined) {
             return res.status(400).json(new ApiResponse(400, {}, "No file is sent"));
         }
@@ -98,21 +103,28 @@ const addBulkTestDataofUsers = async (req, res, next) => {
             let presentIds = await User.distinct("employeeId", { employeeId: { $in: employeeIds } });
             let missingIds = employeeIds.filter(id => !presentIds.includes(id));
             if (missingIds.length) {
-                return res.status(400).json(new ApiResponse(400, {}, missingIds.join(",") + " users not present in system"));
+                return res.status(400).json(new ApiResponse(400, {}, missingIds.join(",") + " users are not present in system"));
             }
             else {
-                
                 session.startTransaction();
                 let assessment = new Assessment(
                     {
                         moduleName: req.body.moduleName,
+                        quizName: req.body.quizName,
                         date: req.body.date,
                         totalMarks: req.body.totalMarks
                     }
                 );
                 await assessment.save(session);
+                let batchId;
                 await excelData.Sheet1.map(async object => {
                     let user = await User.findOne({ employeeId: object.employeeId });
+                    if (batchId !== user.batch) {
+                        batchId = user.batch;
+                        let batch = await Batch.findById(batchId);
+                        batch.assessments.push(assessment._id);
+                        batch.save(session);
+                    }
                     let userAssessment = new UserAssessment(
                         {
                             userRef: user._id,
@@ -125,7 +137,6 @@ const addBulkTestDataofUsers = async (req, res, next) => {
                 session.commitTransaction();
                 fs.remove(filePath);
                 return res.status(200).json(new ApiResponse(200, assessment, "Assessment details are saved."));
-
             }
         }
     }
@@ -136,18 +147,85 @@ const addBulkTestDataofUsers = async (req, res, next) => {
     }
 }
 
-const allUsers = async (req, res, next)=>{
+const allUsers = async (req, res, next) => {
     let users;
-    try{
-        let {location} = req.params;
-        users = await User.find({role: "Trainee", isActive: true, location:location}).select("-password -refreshToken -isActive");
+    try {
+        let { location, batchName } = req.params;
+        let query = { batchName: batchName, location: location };
+        if (!batchName) {
+            query = { location: location, isLatest: true };
+        }
+        let batch = await Batch.aggregate([
+            { $match: query },
+            {
+                $lookup: {
+                    from: "User",
+                    localField: "trainees",
+                    foreignField: "_id",
+                    as: "trainees",
+                    pipeline: [
+                        {
+                            $lookup: {
+                                from: "UsersAssessments",
+                                localField: "_id",
+                                foreignField: "userRef",
+                                as: "assessments",
+                                pipeline: [
+                                    {
+                                        $group: {
+                                            _id: "$userRef",
+                                            averageMarks: {
+                                                $avg: "$marksObtained",
+                                            },
+                                            assessments: {
+                                                $push: "$assessmentRef",
+                                            },
+                                        },
+                                    },
+                                    {
+                                        $lookup: {
+                                            from: "Assessments",
+                                            localField: "assessments",
+                                            foreignField: "_id",
+                                            as: "assessments",
+                                        },
+                                    },
+                                    {
+                                        $addFields: {
+                                            total: {
+                                                $sum: { $sum: "$assessments.totalMarks" },
+                                            },
+                                        }
+                                    },
+                                    {
+                                        $addFields: {
+                                            percentage: {
+                                                $multiply: [{ $divide: ["$averageMarks", "$total"] }, 100]
+                                            }
+                                        },
+                                    },
+                                ]
+                            },
+                        },
+                    ]
+                }
+            },
+            {
+                $project: {
+                    password: 0,
+                    refreshToken: 0,
+                    isActive: 0
+                }
+            }
+        ]);
+        users = batch[0].trainees;
         return res.status(200).json(new ApiResponse(200, users));
-    }catch(e){
+    } catch (e) {
         return res.status(500).json(new ApiResponse(500, {}, "Something went wrong"));
     }
 }
 
-const getAllBatches = async(req, res)=>{
+const getAllBatches = async (req, res) => {
     try {
         let batches = await Batch.find({});
         return res.status(200).json(new ApiResponse(200, batches));

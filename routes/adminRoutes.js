@@ -11,7 +11,8 @@ adminRouter.use(authMiddleware);
 adminRouter.use(adminAuthMiddleware)
 adminRouter.post('/bulk/users', upload.single('file'), validateIncomingBulkUsers, bulkUsersFromFile);
 adminRouter.post('/bulk/test', upload.single('file'), validateIncomingBulkTest, addBulkTestDataofUsers);
-adminRouter.get("/trainees/:location/:batchName", allUsers);
+adminRouter.get("/trainees/:location?/:batchName?", allUsers);
 adminRouter.get("/batches", getAllBatches);
+// adminRouter.get("/trainees/dd", get);
 
 export default adminRouter;

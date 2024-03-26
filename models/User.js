@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+import mongoose, { mongo } from "mongoose";
 import jwt from "jsonwebtoken"
 import bcrypt from "bcryptjs"
 
@@ -7,18 +7,18 @@ const UserSchema = new mongoose.Schema(
         firstName: {
             type: String,
             require: true,
-            trim : true
+            trim: true
         },
         lastName: {
             type: String,
             require: true,
-            trim : true
+            trim: true
         },
         email: {
             type: String,
             unique: true,
             required: true,
-            trim : true
+            trim: true
         },
         password: {
             type: String,
@@ -52,6 +52,10 @@ const UserSchema = new mongoose.Schema(
         isActive: {
             type: Boolean,
             default: true
+        },
+        batch: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Batch"
         }
     }, { collection: "User", versionKey: false }
 );
