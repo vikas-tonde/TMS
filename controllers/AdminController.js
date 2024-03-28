@@ -73,8 +73,8 @@ const bulkUsersFromFile = async (req, res, next) => {
             console.log(Object.values(insertedIds));
             let trainees = Object.values(insertedIds);
             batch.trainees = trainees;
-            await batch.save(session);
             let oldBatch = await Batch.findOneAndUpdate({ location: location, isLatest: true }, { isLatest: false }, { new: true }).session(session);
+            await batch.save(session);
             session.commitTransaction();
             return res.status(200).json(new ApiResponse(200, insertedcount + " Users saved", "User uploading is finished"));
         }
@@ -248,10 +248,21 @@ const getAllModules = async (req, res) => {
     }
 }
 
+const getAllTrainees = async (req, res) => {
+    try {
+        let trainees = await User.find({ batch: req.params.batchId }).select("-password -refreshToken -isActive -profileImage -role");
+        return res.status(200).json(new ApiResponse(200, trainees));
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json(new ApiResponse(500, {}, "Something went wrong"));
+    }
+}
+
 export {
     bulkUsersFromFile,
     addBulkTestDataofUsers,
     allUsers,
     getAllBatches,
-    getAllModules
+    getAllModules,
+    getAllTrainees
 };
