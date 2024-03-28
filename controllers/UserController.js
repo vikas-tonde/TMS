@@ -2,6 +2,7 @@ import { User } from "../models/User.js";
 import bcrypt from 'bcryptjs';
 import { validationResult } from 'express-validator';
 import { ApiResponse } from "../utils/ApiResponse.js";
+import { Batch } from "../models/Batch.js";
 
 const generateAccessAndRefreshTokens = async (employeeId) => {
     try {
@@ -89,6 +90,15 @@ const getSelf = (req, res) => {
         new ApiResponse(200, { user: req.user }, "This is your information.")
     );
 }
+const getAllUserModules= async (req, res)=>{
+    try {
+        let batch = (await Batch.findOne({ _id: req.user.batch }))[0];
+        let moduleNames = await Assessment.distinct("moduleName", {_id: {$in:batch.assessments}});
+        return res.status(200).json(new ApiResponse(200, moduleNames));
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json(new ApiResponse(500, {}, "Something went wrong"));
+    }
+}
 
-
-export { addUser, loginUser, getSelf };
+export { addUser, loginUser, getSelf, getAllUserModules };

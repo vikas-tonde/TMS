@@ -16,6 +16,11 @@ const AssessmentSchema = new mongoose.Schema(
         },
         totalMarks: {
             type: Number
+        },
+        assessmentType:{
+            type: String,
+            required: true,
+            enum : ["Quiz","Assignment","Presentation"]
         }
     }, { collection: "Assessments", versionKey: false }
 );

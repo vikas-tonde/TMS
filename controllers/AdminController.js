@@ -112,7 +112,8 @@ const addBulkTestDataofUsers = async (req, res, next) => {
                         moduleName: req.body.moduleName,
                         quizName: req.body.quizName,
                         date: req.body.date,
-                        totalMarks: req.body.totalMarks
+                        totalMarks: req.body.totalMarks,
+                        assessmentType: req.body.assessmentType
                     }
                 );
                 await assessment.save(session);
@@ -122,8 +123,10 @@ const addBulkTestDataofUsers = async (req, res, next) => {
                     if (batchId !== user.batch) {
                         batchId = user.batch;
                         let batch = await Batch.findById(batchId);
-                        batch.assessments.push(assessment._id);
-                        batch.save(session);
+                        if (!batch.assessments.includes(assessment._id)) {
+                            batch.assessments.push(assessment._id);
+                            batch.save(session);
+                        }
                     }
                     let userAssessment = new UserAssessment(
                         {
@@ -169,7 +172,7 @@ const allUsers = async (req, res, next) => {
                                 from: "UsersAssessments",
                                 localField: "_id",
                                 foreignField: "userRef",
-                                as: "assessments",
+                                as: "Exams",
                                 pipeline: [
                                     {
                                         $group: {
@@ -235,9 +238,20 @@ const getAllBatches = async (req, res) => {
     }
 }
 
+const getAllModules = async (req, res) => {
+    try {
+        let moduleNames = await Assessment.distinct("moduleName");
+        return res.status(200).json(new ApiResponse(200, moduleNames));
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json(new ApiResponse(500, {}, "Something went wrong"));
+    }
+}
+
 export {
     bulkUsersFromFile,
     addBulkTestDataofUsers,
     allUsers,
-    getAllBatches
+    getAllBatches,
+    getAllModules
 };
