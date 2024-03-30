@@ -230,7 +230,7 @@ const allUsers = async (req, res, next) => {
 
 const getAllBatches = async (req, res) => {
     try {
-        let batches = await Batch.find({});
+        let batches = await Batch.find({}).select("-isLatest -isActive");
         return res.status(200).json(new ApiResponse(200, batches));
     } catch (error) {
         console.log(error);
