@@ -7,7 +7,7 @@ import { Batch } from "../models/Batch.js";
 import { User } from "../models/User.js";
 import { UserAssessment } from "../models/UserAssessment.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
-
+import bcrypt from 'bcryptjs'
 
 const readExcelFile = async (filePath, sheetName) => {
     return excelToJson({
@@ -258,11 +258,42 @@ const getAllTrainees = async (req, res) => {
     }
 }
 
+const addUser = async (req, res, next) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+    } else {
+        let session = await mongoose.startSession();
+        try {
+            const userFromReq = req.body;
+            const salt = await bcrypt.genSalt(10);
+            const { firstName , lastName , email, password, employeeId, location ,batchId ,role} = userFromReq;
+            const hashedPassword = await bcrypt.hash(password, salt);
+
+            session.startTransaction();
+            const user = new User({ firstName: firstName,lastName:lastName , email: email, password: hashedPassword, employeeId: employeeId, location: location, role: role });
+            let batch = await Batch.findById(batchId);
+            batch.trainees.push(user._id);
+            await batch.save(session);
+            user.batch = batch._id;
+            await user.save(session)
+            session.commitTransaction();
+            return res.status(200).json(new ApiResponse(200, user, "User registered successfully"));
+        }
+        catch (e) {
+            session.abortTransaction()
+            console.log(e);
+            return res.status(500).json(new ApiResponse(500, {}, "Something went wrong while registering the user."));
+        }
+    }
+}
+
 export {
     bulkUsersFromFile,
     addBulkTestDataofUsers,
     allUsers,
     getAllBatches,
     getAllModules,
-    getAllTrainees
+    getAllTrainees,
+    addUser
 };

@@ -1,9 +1,9 @@
 import express from "express";
-import { upload } from "../middlewares/multerMiddleware.js";
-import { addBulkTestDataofUsers, bulkUsersFromFile, allUsers, getAllBatches, getAllModules, getAllTrainees } from "../controllers/AdminController.js";
-import { authMiddleware } from "../middlewares/authMiddleware.js";
+import { addBulkTestDataofUsers, addUser, allUsers, bulkUsersFromFile, getAllBatches, getAllModules, getAllTrainees } from "../controllers/AdminController.js";
 import { adminAuthMiddleware } from "../middlewares/adminAuthMiddleware.js";
-import { validateIncomingBulkTest, validateIncomingBulkUsers } from "../validations/AdminRouteValidations.js";
+import { authMiddleware } from "../middlewares/authMiddleware.js";
+import { upload } from "../middlewares/multerMiddleware.js";
+import { validateIncomingBulkTest, validateIncomingBulkUsers, validateUser } from "../validations/AdminRouteValidations.js";
 
 const adminRouter = express.Router();
 
@@ -15,6 +15,7 @@ adminRouter.post('/bulk/test', upload.single('file'), validateIncomingBulkTest, 
 adminRouter.get("/trainees/:location?/:batchName?", allUsers);
 adminRouter.get("/batches", getAllBatches);
 adminRouter.get("/modules", getAllModules);
+adminRouter.post("/single/users", validateUser, addUser);
 // adminRouter.get("/trainees/dd", get);
 
 export default adminRouter;

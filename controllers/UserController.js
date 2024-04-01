@@ -19,27 +19,7 @@ const generateAccessAndRefreshTokens = async (employeeId) => {
     }
 }
 
-const addUser = async (req, res, next) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-        return res.status(400).json({ errors: errors.array() });
-    } else {
-        const userFromReq = req.body;
-        const salt = await bcrypt.genSalt(10);
-        const { name, email, password, employeeId, location } = userFromReq;
-        const hashedPassword = await bcrypt.hash(password, salt);
-        const role = "Trainee";
-        try {
-            const user = new User({ name: name, email: email, password: hashedPassword, employeeId: employeeId, location: location, role: role });
-            await user.save()
-            return res.status(200).json(new ApiResponse(200, user, "User registered successfully"));
-        }
-        catch (e) {
-            console.log(e);
-            return res.status(500).json(new ApiResponse(500, {}, "Something went wrong while registering the user."));
-        }
-    }
-}
+
 
 const loginUser = async (req, res) => {
     const { employeeId, password } = req.body;
@@ -101,4 +81,4 @@ const getAllUserModules= async (req, res)=>{
     }
 }
 
-export { addUser, loginUser, getSelf, getAllUserModules };
+export {loginUser, getSelf, getAllUserModules };

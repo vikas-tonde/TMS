@@ -14,7 +14,19 @@ const validateIncomingBulkTest = [
     check('totalMarks', 'Enter the valid total marks').isNumeric().exists({ checkFalsy: true })
 ];
 
+const validateUser = [
+    check('firstName', 'Enter the valid name').isLength({ min: 3 }),
+    check('lastName', 'Enter the valid name').isLength({ min: 3 }),
+    check('email', 'Enter the valid email').isEmail(),
+    check('password', 'Enter the strong password').isLength({ min: 8 }),
+    check('employeeId', 'Enter the valid employee id').exists({ checkFalsy: true }),
+    check('location', 'Enter the valid location').isLength({ min: 3 }),
+    check('batch', 'Enter the valid batchId').isLength({ min: 6 }),
+    check('role', 'Enter the valid batchId').exists({ checkFalsy: true })  /*.matches([/\b(?:Admin|Trainee)\b/]),*/
+];
+
 export {
+    validateUser,
     validateIncomingBulkTest,
     validateIncomingBulkUsers
 };
