@@ -9,7 +9,7 @@ let date = new Date();
 date.setDate(date.getDate()+1);
 const validateIncomingBulkTest = [
     check('moduleName', 'Enter the valid name').isLength({ min: 3 }),
-    check('quizName', 'Enter the valid name').isLength({ min: 3 }),
+    check('assessmentName', 'Enter the valid assessment name').isLength({ min: 3 }),
     check('date', 'Enter the valid date').isBefore(date.toDateString()),
     check('totalMarks', 'Enter the valid total marks').isNumeric().exists({ checkFalsy: true })
 ];
@@ -25,8 +25,15 @@ const validateUser = [
     check('role', 'Enter the valid batchId').exists({ checkFalsy: true })  /*.matches([/\b(?:Admin|Trainee)\b/]),*/
 ];
 
+const validateAddSingleAssessmentDetails = [
+    check('assessmentId', 'Enter the vallid assessment id.').isLength(24),
+    check('employeeId', 'Enter the valid employee id').exists({ checkFalsy: true }),
+    check('obtainedMarks', 'Enter the marks obtained.').isNumeric().exists({ checkFalsy: true })
+];
+
 export {
     validateUser,
     validateIncomingBulkTest,
-    validateIncomingBulkUsers
+    validateIncomingBulkUsers,
+    validateAddSingleAssessmentDetails
 };

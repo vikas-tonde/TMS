@@ -6,7 +6,7 @@ const AssessmentSchema = new mongoose.Schema(
             type: String,
             required: true
         },
-        quizName: {
+        assessmentName: {
             type: String,
             required: true
         },

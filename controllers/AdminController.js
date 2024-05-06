@@ -110,7 +110,7 @@ const addBulkTestDataofUsers = async (req, res, next) => {
                 let assessment = new Assessment(
                     {
                         moduleName: req.body.moduleName,
-                        quizName: req.body.quizName,
+                        assessmentName: req.body.assessmentName,
                         date: req.body.date,
                         totalMarks: req.body.totalMarks,
                         assessmentType: req.body.assessmentType
@@ -267,11 +267,11 @@ const addUser = async (req, res, next) => {
         try {
             const userFromReq = req.body;
             const salt = await bcrypt.genSalt(10);
-            const { firstName , lastName , email, password, employeeId, location ,batchId ,role} = userFromReq;
+            const { firstName, lastName, email, password, employeeId, location, batchId, role } = userFromReq;
             const hashedPassword = await bcrypt.hash(password, salt);
 
             session.startTransaction();
-            const user = new User({ firstName: firstName,lastName:lastName , email: email, password: hashedPassword, employeeId: employeeId, location: location, role: role });
+            const user = new User({ firstName: firstName, lastName: lastName, email: email, password: hashedPassword, employeeId: employeeId, location: location, role: role });
             let batch = await Batch.findById(batchId);
             batch.trainees.push(user._id);
             await batch.save(session);
@@ -288,6 +288,54 @@ const addUser = async (req, res, next) => {
     }
 }
 
+const getAssessmentsForSpecificBatch = async (req, res) => {
+    try {
+
+        let batchId = req.params.batchId;
+        let batch = await Batch.findById(batchId);
+        let assessmentType = req.params.assessmentType;
+        let assessments = await Assessment.find({ _id: { $in: batch.assessments }, assessmentType: assessmentType }).select("moduleName assessmentName");
+        return res.status(200).json(new ApiResponse(200, assessments, "Assessments fetched successfully"));
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json(new ApiResponse(500, {}, "Something went wrong while fetching Assessments."));
+
+    }
+}
+
+const addSingleAssessmentDetails = async (req, res) => {
+    let session = await mongoose.startSession();
+    try {
+        let operation = "updated";
+        let { assessmentId, employeeId, obtainedMarks } = req.body;
+        let user = await User.findOne({ employeeId: employeeId });
+        if (!user) {
+            return res.status(404).json(new ApiResponse(500, {}, `There is no user with employee id ${employeeId}.`));
+        }
+        let userAssessment = await UserAssessment.findOne({ userRef: user._id, assessmentRef: assessmentId });
+        session.startTransaction();
+        if (!userAssessment) {
+            let assessment = Assessment.findById(assessmentId);
+            if (!assessment) {
+                session.abortTransaction();
+                return res.status(404).json(new ApiResponse(500, {}, `There is no assessment with id ${assessmentId}.`));
+            }
+            userAssessment = new UserAssessment({ userRef: user._id, assessmentRef: assessmentId, marksObtained: obtainedMarks });
+            operation = "added";
+        }
+        else {
+            userAssessment.marksObtained = obtainedMarks;
+        }
+        userAssessment.save(session);
+        session.commitTransaction();
+        return res.status(200).json(new ApiResponse(200, {}, `Exam details ${operation} successfully for employee id: ${employeeId}`));
+    } catch (error) {
+        session.abortTransaction();
+        console.log(error);
+        return res.status(500).json(new ApiResponse(500, {}, "Something went wrong while adding exam details."));
+    }
+}
+
 export {
     bulkUsersFromFile,
     addBulkTestDataofUsers,
@@ -295,5 +343,7 @@ export {
     getAllBatches,
     getAllModules,
     getAllTrainees,
-    addUser
+    addUser,
+    getAssessmentsForSpecificBatch,
+    addSingleAssessmentDetails,
 };
