@@ -9,6 +9,7 @@ import morgan from "morgan";
 
 import adminRouter from "./routes/adminRoutes.js";
 import userRouter from "./routes/userRoutes.js";
+import traineeRouter from "./routes/traineeRoutes.js";
 
 dotenv.config({ path: ".env.dev" });
 
@@ -46,13 +47,14 @@ app.use(bodyParser.json());
 
 app.use("/api/users", userRouter);
 app.use("/api/admin", adminRouter);
+app.use("/api/trainee", traineeRouter);
 
 // var server = https.createServer(options, app);
 mongoose.connect(process.env.MONGO_URL).then((con) => {
     console.log(`Database connected on Host: ${con.connection.host}`);
     app.listen(port, () => console.log(`Server is runnning on port : http://localhost:${port}`));
 })
-.catch((err) => {
-    console.log("MONGO db connection failed !!! ", err);
-    throw err;
-});
+    .catch((err) => {
+        console.log("MONGO db connection failed !!! ", err);
+        throw err;
+    });

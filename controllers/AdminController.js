@@ -289,8 +289,8 @@ const addUser = async (req, res, next) => {
 }
 
 const getAssessmentsForSpecificBatch = async (req, res) => {
-    try {
 
+    try {
         let batchId = req.params.batchId;
         let batch = await Batch.findById(batchId);
         let assessmentType = req.params.assessmentType;
@@ -304,35 +304,41 @@ const getAssessmentsForSpecificBatch = async (req, res) => {
 }
 
 const addSingleAssessmentDetails = async (req, res) => {
-    let session = await mongoose.startSession();
-    try {
-        let operation = "updated";
-        let { assessmentId, employeeId, obtainedMarks } = req.body;
-        let user = await User.findOne({ employeeId: employeeId });
-        if (!user) {
-            return res.status(404).json(new ApiResponse(500, {}, `There is no user with employee id ${employeeId}.`));
-        }
-        let userAssessment = await UserAssessment.findOne({ userRef: user._id, assessmentRef: assessmentId });
-        session.startTransaction();
-        if (!userAssessment) {
-            let assessment = Assessment.findById(assessmentId);
-            if (!assessment) {
-                session.abortTransaction();
-                return res.status(404).json(new ApiResponse(500, {}, `There is no assessment with id ${assessmentId}.`));
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+    }
+    else {
+        let session = await mongoose.startSession();
+        try {
+            let operation = "updated";
+            let { assessmentId, employeeId, obtainedMarks } = req.body;
+            session.startTransaction();
+            let user = await User.findOne({ employeeId: employeeId });
+            if (!user) {
+                return res.status(404).json(new ApiResponse(500, {}, `There is no user with employee id ${employeeId}.`));
             }
-            userAssessment = new UserAssessment({ userRef: user._id, assessmentRef: assessmentId, marksObtained: obtainedMarks });
-            operation = "added";
+            let userAssessment = await UserAssessment.findOne({ userRef: user._id, assessmentRef: assessmentId });
+            if (!userAssessment) {
+                let assessment = Assessment.findById(assessmentId);
+                if (!assessment) {
+                    session.abortTransaction();
+                    return res.status(404).json(new ApiResponse(500, {}, `There is no assessment with id ${assessmentId}.`));
+                }
+                userAssessment = new UserAssessment({ userRef: user._id, assessmentRef: assessmentId, marksObtained: obtainedMarks });
+                operation = "added";
+            }
+            else {
+                userAssessment.marksObtained = obtainedMarks;
+            }
+            userAssessment.save(session);
+            session.commitTransaction();
+            return res.status(200).json(new ApiResponse(200, {}, `Exam details ${operation} successfully for employee id: ${employeeId}`));
+        } catch (error) {
+            session.abortTransaction();
+            console.log(error);
+            return res.status(500).json(new ApiResponse(500, {}, "Something went wrong while adding exam details."));
         }
-        else {
-            userAssessment.marksObtained = obtainedMarks;
-        }
-        userAssessment.save(session);
-        session.commitTransaction();
-        return res.status(200).json(new ApiResponse(200, {}, `Exam details ${operation} successfully for employee id: ${employeeId}`));
-    } catch (error) {
-        session.abortTransaction();
-        console.log(error);
-        return res.status(500).json(new ApiResponse(500, {}, "Something went wrong while adding exam details."));
     }
 }
 
