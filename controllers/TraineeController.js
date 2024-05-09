@@ -35,7 +35,7 @@ const getExams = async (req, res) => {
             return res.status(200).json(new ApiResponse(200, examDetails));
         }
         else{
-            return res.status(200).json(new ApiResponse(200, {}, "You have not given any assessment yet."));
+            return res.status(200).json(new ApiResponse(200, examDetails, "You have not given any assessment yet."));
         }
     } catch (error) {
         console.log(error);
