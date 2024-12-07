@@ -70,10 +70,10 @@ const getSelf = (req, res) => {
         new ApiResponse(200, { user: req.user }, "This is your information.")
     );
 }
-const getAllUserModules= async (req, res)=>{
+const getAllUserModules = async (req, res) => {
     try {
         let batch = (await Batch.findOne({ _id: req.user.batch }))[0];
-        let moduleNames = await Assessment.distinct("moduleName", {_id: {$in:batch.assessments}});
+        let moduleNames = await Assessment.distinct("moduleName", { _id: { $in: batch.assessments } });
         return res.status(200).json(new ApiResponse(200, moduleNames));
     } catch (error) {
         console.log(error);
@@ -81,4 +81,22 @@ const getAllUserModules= async (req, res)=>{
     }
 }
 
-export {loginUser, getSelf, getAllUserModules };
+const chanegPassword = async (req, res) => {
+    try {
+        let { newPassword, confirmPassword } = req.body;
+        if (newPassword != confirmPassword) {
+            return res.status(400).json(new ApiResponse(400, {}, "Both password strings doesn't match with each other."));
+        }
+        let user = await User.findById(req.user._id);
+        user.password = newPassword;
+        user.save();
+        return res.status(200).json(new ApiResponse(200, {}, "Password is changed successfully."));
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json(new ApiResponse(500, {}, "Something went wrong while changing password."));
+    }
+}
+
+
+
+export { loginUser, getSelf, getAllUserModules, chanegPassword };

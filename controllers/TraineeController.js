@@ -1,8 +1,3 @@
-import { validationResult } from 'express-validator';
-import mongoose from "mongoose";
-import { Assessment } from "../models/Assessment.js";
-import { Batch } from "../models/Batch.js";
-import { User } from "../models/User.js";
 import { UserAssessment } from "../models/UserAssessment.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 
@@ -41,7 +36,6 @@ const getExams = async (req, res) => {
         console.log(error);
         return res.status(500).json(new ApiResponse(500, {}, "Something went wrong"));
     }
-    
 }
 
 export {
