@@ -238,6 +238,17 @@ const getAllBatches = async (req, res) => {
     }
 }
 
+const getBatch = async (req, res) => {
+    let { batchId } = req.params;
+    try {
+        let batch = await Batch.findOne({ _id: batchId });
+        return res.status(200).json(new ApiResponse(200, batch));
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json(new ApiResponse(500, {}, `Unable to find the batch with ID :${req.params.batchId}`));
+    }
+}
+
 const getAllModules = async (req, res) => {
     try {
         let moduleNames = await Assessment.distinct("moduleName");
@@ -289,12 +300,24 @@ const addUser = async (req, res, next) => {
 }
 
 const getAssessmentsForSpecificBatch = async (req, res) => {
-
     try {
         let batchId = req.params.batchId;
         let batch = await Batch.findById(batchId);
         let assessmentType = req.params.assessmentType;
         let assessments = await Assessment.find({ _id: { $in: batch.assessments }, assessmentType: assessmentType }).select("moduleName assessmentName");
+        return res.status(200).json(new ApiResponse(200, assessments, "Assessments fetched successfully"));
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json(new ApiResponse(500, {}, "Something went wrong while fetching Assessments."));
+    }
+}
+
+const getAssessmentsDetailsForSpecificBatch = async (req, res) => {
+    try {
+        let batchId = req.params.batchId;
+        let batch = await Batch.findById(batchId);
+        let assessmentType = req.params.assessmentType;
+        let assessments = await Assessment.find({ _id: { $in: batch.assessments } });
         return res.status(200).json(new ApiResponse(200, assessments, "Assessments fetched successfully"));
     } catch (error) {
         console.log(error);
@@ -342,14 +365,18 @@ const addSingleAssessmentDetails = async (req, res) => {
     }
 }
 
+
+
 export {
     bulkUsersFromFile,
     addBulkTestDataofUsers,
     allUsers,
     getAllBatches,
+    getBatch,
     getAllModules,
     getAllTrainees,
     addUser,
     getAssessmentsForSpecificBatch,
+    getAssessmentsDetailsForSpecificBatch,
     addSingleAssessmentDetails,
 };

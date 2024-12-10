@@ -2,7 +2,6 @@ import express from "express";
 import { chanegPassword, getSelf, loginUser } from "../controllers/UserController.js";
 import { authMiddleware } from "../middlewares/authMiddleware.js";
 import { validateLogin } from '../validations/UserValidation.js';
-import { upload } from "../middlewares/multerMiddleware.js";
 
 const userRouter = express.Router();
 
