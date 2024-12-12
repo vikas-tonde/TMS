@@ -1,5 +1,5 @@
 import express from "express";
-import { addBulkTestDataofUsers, addSingleAssessmentDetails, addUser, allUsers, bulkUsersFromFile, getAllBatches, getAllModules, getAllTrainees, getAssessmentsDetailsForSpecificBatch, getAssessmentsForSpecificBatch, getBatch } from "../controllers/AdminController.js";
+import { addBulkTestDataofUsers, addSingleAssessmentDetails, addUser, allUsers, bulkUsersFromFile, getAllBatches, getAllModules, getAllTrainees, getAssessmentDetails, getAssessmentsDetailsForSpecificBatch, getAssessmentsForSpecificBatch, getBatch } from "../controllers/AdminController.js";
 import { adminAuthMiddleware } from "../middlewares/adminAuthMiddleware.js";
 import { authMiddleware } from "../middlewares/authMiddleware.js";
 import { upload } from "../middlewares/multerMiddleware.js";
@@ -18,6 +18,7 @@ adminRouter.get("/batch/:batchId", getBatch);
 adminRouter.get("/modules", getAllModules);
 adminRouter.post("/single/users", validateUser, addUser);
 adminRouter.post("/single/assessment", validateAddSingleAssessmentDetails, addSingleAssessmentDetails);
+adminRouter.get("/assessments/assessment/:assessmentId", getAssessmentDetails);
 adminRouter.get("/assessments/:batchId/:assessmentType", getAssessmentsForSpecificBatch);
 adminRouter.get("/assessments/:batchId", getAssessmentsDetailsForSpecificBatch);
 adminRouter.post("/single/test");
