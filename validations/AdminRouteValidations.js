@@ -32,8 +32,6 @@ const validateAddSingleAssessmentDetails = [
 ];
 
 export {
-    validateUser,
-    validateIncomingBulkTest,
-    validateIncomingBulkUsers,
-    validateAddSingleAssessmentDetails
+    validateAddSingleAssessmentDetails, validateIncomingBulkTest,
+    validateIncomingBulkUsers, validateUser
 };

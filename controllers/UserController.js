@@ -47,7 +47,8 @@ const loginUser = async (req, res) => {
 
     const options = {
         httpOnly: true,
-        path: "/"
+        path: "/",
+        maxAge: process.env.COOKIE_EXPIRY
     }
     return res
         .cookie("accessToken", accessToken, options)

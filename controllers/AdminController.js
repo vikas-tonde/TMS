@@ -1,3 +1,4 @@
+import bcrypt from 'bcryptjs';
 import excelToJson from "convert-excel-to-json";
 import { validationResult } from 'express-validator';
 import * as fs from 'fs-extra';
@@ -7,7 +8,6 @@ import { Batch } from "../models/Batch.js";
 import { User } from "../models/User.js";
 import { UserAssessment } from "../models/UserAssessment.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
-import bcrypt from 'bcryptjs'
 
 const readExcelFile = async (filePath, sheetName) => {
   return excelToJson({
@@ -168,6 +168,11 @@ const allUsers = async (req, res, next) => {
           as: "trainees",
           pipeline: [
             {
+              $match: {
+                isActive: true
+              }
+            },
+            {
               $lookup: {
                 from: "UsersAssessments",
                 localField: "_id",
@@ -221,10 +226,15 @@ const allUsers = async (req, res, next) => {
         }
       }
     ]);
-    users = batch[0].trainees;
-    return res.status(200).json(new ApiResponse(200, users));
+    if(batch.length>0)
+    {
+      users = batch[0]?.trainees;
+      return res.status(200).json(new ApiResponse(200, users));
+    }
+    return res.status(200).json(new ApiResponse(200, {}, "No records found"));
   } catch (e) {
-    return res.status(500).json(new ApiResponse(500, {}, "Something went wrong"));
+    console.log(e);
+    return res.status(500).json(new ApiResponse(500, {}, "Something went wrong while fetching users"));
   }
 }
 
@@ -296,6 +306,30 @@ const addUser = async (req, res, next) => {
       console.log(e);
       return res.status(500).json(new ApiResponse(500, {}, "Something went wrong while registering the user."));
     }
+  }
+}
+
+const setUserInactive = async (req, res) => {
+  let userIds = req.body?.userIds;
+  if (userIds.length > 0) {
+    let session = await mongoose.startSession();
+    try {
+      session.startTransaction()
+      for (let userId of userIds) {
+        let user = await User.findById(userId);
+        user.isActive = false;
+        user.save(session);
+      }
+      session.commitTransaction();
+      return res.status(200).json(new ApiResponse(200, {}, "user(s) have been set to inactive."));
+    } catch (error) {
+      session.abortTransaction();
+      console.log(error);
+      return res.status(500).json(new ApiResponse(500, {}, "Something went wrong while setting user inactive."));
+    }
+  }
+  else {
+    return res.status(400).json(new ApiResponse(400, {}, "User Id is not provided."));
   }
 }
 
@@ -461,9 +495,9 @@ const getAssessmentDetails = async (req, res) => {
       }
     ]);
     if (details.length > 0) {
-      return res.status(200).json(new ApiResponse(200, details[0], `${details.length} records found`));
+      return res.status(200).json(new ApiResponse(200, details[0], `${details.length} record/s found`));
     }
-    else{
+    else {
       return res.status(200).json(new ApiResponse(200, {}, `No data found`));
     }
   } catch (e) {
@@ -474,16 +508,7 @@ const getAssessmentDetails = async (req, res) => {
 }
 
 export {
-  bulkUsersFromFile,
-  addBulkTestDataofUsers,
-  allUsers,
-  getAllBatches,
-  getBatch,
-  getAllModules,
-  getAllTrainees,
-  addUser,
-  getAssessmentsForSpecificBatch,
-  getAssessmentsDetailsForSpecificBatch,
-  getAssessmentDetails,
-  addSingleAssessmentDetails,
+  addBulkTestDataofUsers, addSingleAssessmentDetails, addUser, allUsers, bulkUsersFromFile, getAllBatches, getAllModules,
+  getAllTrainees, getAssessmentDetails, getAssessmentsDetailsForSpecificBatch, getAssessmentsForSpecificBatch, getBatch, setUserInactive
 };
+
