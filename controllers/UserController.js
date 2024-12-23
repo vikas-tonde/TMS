@@ -98,6 +98,28 @@ const chanegPassword = async (req, res) => {
     }
 }
 
+const signOut = async (req, res) => {
+    const token = req.cookies?.accessToken;
+    if (!token) {
+        return res.status(400).json(new ApiResponse(400, {}, "User already logged out."));
+    }
+    const options = {
+        httpOnly: true,
+        path: "/"
+    }
+    return res
+        .cookie("accessToken", "", options)
+        .cookie("refreshToken", "", options)
+        .status(200)
+        .json(
+            new ApiResponse(
+                200,
+                {},
+                "User logged out Successfully"
+            )
+        );
+}
 
 
-export { loginUser, getSelf, getAllUserModules, chanegPassword };
+
+export { loginUser, getSelf, getAllUserModules, chanegPassword, signOut };
