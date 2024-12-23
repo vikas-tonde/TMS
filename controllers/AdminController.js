@@ -1,5 +1,6 @@
 import bcrypt from 'bcryptjs';
 import excelToJson from "convert-excel-to-json";
+import * as xlsx from 'node-xlsx';
 import { validationResult } from 'express-validator';
 import * as fs from 'fs-extra';
 import mongoose from "mongoose";
@@ -63,6 +64,7 @@ const bulkUsersFromFile = async (req, res, next) => {
       session.startTransaction();
       var filePath = process.env.FILE_UPLOAD_LOCATION + req.file.filename;
       const excelData = await readExcelFile(filePath, ["Users"]);
+      const data = xlsx.parse(fs.readFileSync(filePath));
       let { batchName, location } = req.body;
       let batch = new Batch({ batchName: batchName, location: location, isLatest: true });
       let { insertedcount, insertedIds } = await addUsers(excelData.Users, session, batch._id);
@@ -226,8 +228,7 @@ const allUsers = async (req, res, next) => {
         }
       }
     ]);
-    if(batch.length>0)
-    {
+    if (batch.length > 0) {
       users = batch[0]?.trainees;
       return res.status(200).json(new ApiResponse(200, users));
     }
@@ -238,10 +239,83 @@ const allUsers = async (req, res, next) => {
   }
 }
 
+const getTraineeDetails = async (req, res) => {
+  let { employeeId } = req.params;
+  try {
+    if (employeeId) {
+      let results = await User.aggregate([
+        {
+          $match: {
+            employeeId: employeeId
+          }
+        },
+        {
+          $lookup: {
+            from: "UsersAssessments",
+            localField: "_id",
+            foreignField: "userRef",
+            as: "assessments",
+            pipeline: [
+              {
+                $lookup: {
+                  from: "Assessments",
+                  localField: "assessmentRef", // Foreign key in UsersAssessments
+                  foreignField: "_id", // Primary key in Assessments
+                  as: "assessmentDetails"
+                }
+              },
+              {
+                $unwind: "$assessmentDetails" // Flatten the assessmentDetails array to merge into a single object
+              },
+              {
+                $project: {
+                  _id: 1,
+                  marksObtained: 1,
+                  moduleName: "$assessmentDetails.moduleName",
+                  assessmentName: "$assessmentDetails.assessmentName",
+                  date: "$assessmentDetails.date",
+                  totalMarks: "$assessmentDetails.totalMarks",
+                  assessmentType: "$assessmentDetails.assessmentType"
+                }
+              }
+            ]
+          }
+        },
+        {
+          $addFields: {
+            averageMarks: {
+              $cond: {
+                if: { $gt: [{ $size: "$assessments" }, 0] },
+                then: { $avg: "$assessments.marksObtained" },
+                else: 0
+              }
+            }
+          }
+        }
+      ]);
+
+      if (results?.length) {
+        return res.status(200).json(new ApiResponse(200, results[0]));
+      }
+      return res.status(404).json(new ApiResponse(404, {}, `No trainee found for employeeId ${employeeId}`));
+    }
+  } catch (e) {
+    return res.status(500).json(new ApiResponse(500, {}, "Something went wrong"));
+  }
+}
+
 const getAllBatches = async (req, res) => {
   try {
-    let batches = await Batch.find({}).select("-isLatest -isActive");
-    return res.status(200).json(new ApiResponse(200, batches));
+    let { location } = req.params;
+    let query = {};
+    if (location) {
+      query = { location: location };
+    }
+    let batches = await Batch.find(query).select("-isLatest -isActive");
+    if (batches?.length) {
+      return res.status(200).json(new ApiResponse(200, batches));
+    }
+    return res.status(404).json(new ApiResponse(404, {}, `No batches found for location ${location}`));
   } catch (error) {
     console.log(error);
     return res.status(500).json(new ApiResponse(500, {}, "Something went wrong"));
@@ -509,6 +583,7 @@ const getAssessmentDetails = async (req, res) => {
 
 export {
   addBulkTestDataofUsers, addSingleAssessmentDetails, addUser, allUsers, bulkUsersFromFile, getAllBatches, getAllModules,
-  getAllTrainees, getAssessmentDetails, getAssessmentsDetailsForSpecificBatch, getAssessmentsForSpecificBatch, getBatch, setUserInactive
+  getAllTrainees, getAssessmentDetails, getAssessmentsDetailsForSpecificBatch,
+  getAssessmentsForSpecificBatch, getBatch, setUserInactive, getTraineeDetails
 };
 
