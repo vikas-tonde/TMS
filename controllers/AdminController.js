@@ -120,14 +120,14 @@ const addBulkTestDataofUsers = async (req, res, next) => {
         );
         await assessment.save(session);
         let batchId;
-        await excelData.Sheet1.map(async object => {
+        for (const object of excelData.Sheet1) {
           let user = await User.findOne({ employeeId: object.employeeId });
           if (batchId !== user.batch) {
             batchId = user.batch;
             let batch = await Batch.findById(batchId);
             if (!batch.assessments.includes(assessment._id)) {
               batch.assessments.push(assessment._id);
-              batch.save(session);
+              await batch.save(session);
             }
           }
           let userAssessment = new UserAssessment(
@@ -138,7 +138,7 @@ const addBulkTestDataofUsers = async (req, res, next) => {
             }
           );
           await userAssessment.save(session);
-        });
+        }
         session.commitTransaction();
         fs.remove(filePath);
         return res.status(200).json(new ApiResponse(200, assessment, "Assessment details are saved."));
