@@ -2,6 +2,11 @@ import mongoose, { mongo } from "mongoose";
 import jwt from "jsonwebtoken"
 import bcrypt from "bcryptjs"
 
+const remark  = {
+    value: String,
+    date: String
+}
+
 const UserSchema = new mongoose.Schema(
     {
         firstName: {
@@ -40,12 +45,7 @@ const UserSchema = new mongoose.Schema(
             type: String,
             required: true
         },
-        status: {
-            type: String
-        },
-        remarks: {
-            type: String
-        },
+        remarks: [remark],
         refreshToken: {
             type: String
         },

@@ -1,9 +1,9 @@
 import bcrypt from 'bcryptjs';
 import excelToJson from "convert-excel-to-json";
-import * as xlsx from 'node-xlsx';
 import { validationResult } from 'express-validator';
 import * as fs from 'fs-extra';
 import mongoose from "mongoose";
+import * as xlsx from 'node-xlsx';
 import { Assessment } from "../models/Assessment.js";
 import { Batch } from "../models/Batch.js";
 import { User } from "../models/User.js";
@@ -169,11 +169,7 @@ const allUsers = async (req, res, next) => {
           foreignField: "_id",
           as: "trainees",
           pipeline: [
-            {
-              $match: {
-                isActive: true
-              }
-            },
+            { $match: { isActive: true } },
             {
               $lookup: {
                 from: "UsersAssessments",
@@ -184,12 +180,8 @@ const allUsers = async (req, res, next) => {
                   {
                     $group: {
                       _id: "$userRef",
-                      averageMarks: {
-                        $avg: "$marksObtained",
-                      },
-                      assessments: {
-                        $push: "$assessmentRef",
-                      },
+                      averageMarks: { $avg: "$marksObtained" },
+                      assessments: { $push: "$assessmentRef" },
                     },
                   },
                   {
@@ -201,32 +193,27 @@ const allUsers = async (req, res, next) => {
                     },
                   },
                   {
-                    $addFields: {
-                      total: {
-                        $sum: { $sum: "$assessments.totalMarks" },
-                      },
-                    }
-                  },
-                  {
-                    $addFields: {
+                    $set: {
+                      total: { $sum: "$assessments.totalMarks" },
                       percentage: {
-                        $multiply: [{ $divide: ["$averageMarks", "$total"] }, 100]
-                      }
+                        $multiply: [{ $divide: ["$averageMarks", { $sum: "$assessments.totalMarks" }] }, 100],
+                      },
                     },
                   },
-                ]
+                ],
               },
             },
-          ]
-        }
+            { $sort: { "Exams.averageMarks": -1 } },
+          ],
+        },
       },
       {
         $project: {
           password: 0,
           refreshToken: 0,
-          isActive: 0
-        }
-      }
+          isActive: 0,
+        },
+      },
     ]);
     if (batch.length > 0) {
       users = batch[0]?.trainees;
@@ -301,6 +288,14 @@ const getTraineeDetails = async (req, res) => {
     }
   } catch (e) {
     return res.status(500).json(new ApiResponse(500, {}, "Something went wrong"));
+  }
+}
+
+const addRemark = async (req, res) =>{
+  let {employeeId, remark} = req.body;
+
+  if(employeeId){
+    
   }
 }
 
@@ -582,8 +577,8 @@ const getAssessmentDetails = async (req, res) => {
 }
 
 export {
-  addBulkTestDataofUsers, addSingleAssessmentDetails, addUser, allUsers, bulkUsersFromFile, getAllBatches, getAllModules,
-  getAllTrainees, getAssessmentDetails, getAssessmentsDetailsForSpecificBatch,
-  getAssessmentsForSpecificBatch, getBatch, setUserInactive, getTraineeDetails
+  addBulkTestDataofUsers, addSingleAssessmentDetails, addUser, allUsers, bulkUsersFromFile, getAllBatches,
+  getAllModules, getAllTrainees, getAssessmentDetails, getAssessmentsDetailsForSpecificBatch,
+  getAssessmentsForSpecificBatch, getBatch, getTraineeDetails, setUserInactive
 };
 
