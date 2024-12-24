@@ -1,5 +1,5 @@
 import express from "express";
-import { addBulkTestDataofUsers, addSingleAssessmentDetails, addUser, allUsers, bulkUsersFromFile, getAllBatches, getAllModules, getAllTrainees, getAssessmentDetails, getAssessmentsDetailsForSpecificBatch, getAssessmentsForSpecificBatch, getBatch, getTraineeDetails, setUserInactive } from "../controllers/AdminController.js";
+import { addBulkTestDataofUsers, addRemark, addSingleAssessmentDetails, addUser, allUsers, bulkUsersFromFile, getAllBatches, getAllModules, getAllTrainees, getAssessmentDetails, getAssessmentsDetailsForSpecificBatch, getAssessmentsForSpecificBatch, getBatch, getTraineeDetails, setUserInactive } from "../controllers/AdminController.js";
 import { adminAuthMiddleware } from "../middlewares/adminAuthMiddleware.js";
 import { authMiddleware } from "../middlewares/authMiddleware.js";
 import { upload } from "../middlewares/multerMiddleware.js";
@@ -11,6 +11,7 @@ adminRouter.use(authMiddleware);
 adminRouter.use(adminAuthMiddleware)
 adminRouter.post('/bulk/users', upload.single('file'), validateIncomingBulkUsers, bulkUsersFromFile);
 adminRouter.put('/users/user/inactive', setUserInactive);
+adminRouter.put('/users/user/remark', addRemark);
 adminRouter.get('/trainees/info/:batchId', getAllTrainees)
 adminRouter.post('/bulk/test', upload.single('file'), validateIncomingBulkTest, addBulkTestDataofUsers);
 adminRouter.get("/trainees/:location?/:batchName?", allUsers);
