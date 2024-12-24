@@ -76,7 +76,7 @@ const bulkUsersFromFile = async (req, res, next) => {
       let trainees = Object.values(insertedIds);
       batch.trainees = trainees;
       let oldBatch = await Batch.findOneAndUpdate({ location: location, isLatest: true }, { isLatest: false }, { new: true }).session(session);
-      await batch.save(session);
+      await batch.save({ session });
       session.commitTransaction();
       return res.status(200).json(new ApiResponse(200, insertedcount + " Users saved", "User uploading is finished"));
     }
@@ -118,7 +118,7 @@ const addBulkTestDataofUsers = async (req, res, next) => {
             assessmentType: req.body.assessmentType
           }
         );
-        await assessment.save(session);
+        await assessment.save({ session });
         let batchId;
         for (const object of excelData.Sheet1) {
           let user = await User.findOne({ employeeId: object.employeeId });
@@ -127,7 +127,7 @@ const addBulkTestDataofUsers = async (req, res, next) => {
             let batch = await Batch.findById(batchId);
             if (!batch.assessments.includes(assessment._id)) {
               batch.assessments.push(assessment._id);
-              await batch.save(session);
+              await batch.save({ session });
             }
           }
           let userAssessment = new UserAssessment(
@@ -137,7 +137,7 @@ const addBulkTestDataofUsers = async (req, res, next) => {
               marksObtained: object.marks
             }
           );
-          await userAssessment.save(session);
+          await userAssessment.save({ session });
         }
         session.commitTransaction();
         fs.remove(filePath);
@@ -291,11 +291,27 @@ const getTraineeDetails = async (req, res) => {
   }
 }
 
-const addRemark = async (req, res) =>{
-  let {employeeId, remark} = req.body;
+const addRemark = async (req, res) => {
+  let { employeeId, remark } = req.body;
 
-  if(employeeId){
-    
+  if (!(employeeId && remark)) {
+    return res.status(400).json(new ApiResponse(400, {}, "employeeId and remark is not sent."));
+  }
+  let session = await mongoose.startSession();
+  try {
+    let foundUser = await User.findOne({ employeeId }).select("-password -refreshToken -isActive -profileImage -role");
+    if (!foundUser) {
+      return res.status(404).json(new ApiResponse(404, {}, `Employee not found with ${employeeId}`));
+    }
+    session.startTransaction();
+    let date = (new Date().toLocaleDateString());
+    foundUser.remarks.push({ value: remark, date: date });
+    await foundUser.save({ session });
+    session.commitTransaction();
+    return res.status(200).json(new ApiResponse(200, foundUser.remarks));
+  } catch (e) {
+    session.abortTransaction();
+    return res.status(500).json(new ApiResponse(500, {}, "Something went wrong"));
   }
 }
 
@@ -364,9 +380,9 @@ const addUser = async (req, res, next) => {
       const user = new User({ firstName: firstName, lastName: lastName, email: email, password: hashedPassword, employeeId: employeeId, location: location, role: role });
       let batch = await Batch.findById(batchId);
       batch.trainees.push(user._id);
-      await batch.save(session);
+      await batch.save({ session });
       user.batch = batch._id;
-      await user.save(session)
+      await user.save({ session })
       session.commitTransaction();
       return res.status(200).json(new ApiResponse(200, user, "User registered successfully"));
     }
@@ -387,7 +403,7 @@ const setUserInactive = async (req, res) => {
       for (let userId of userIds) {
         let user = await User.findById(userId);
         user.isActive = false;
-        user.save(session);
+        await user.save({ session });
       }
       session.commitTransaction();
       return res.status(200).json(new ApiResponse(200, {}, "user(s) have been set to inactive."));
@@ -456,7 +472,7 @@ const addSingleAssessmentDetails = async (req, res) => {
       else {
         userAssessment.marksObtained = obtainedMarks;
       }
-      userAssessment.save(session);
+      await userAssessment.save({ session });
       session.commitTransaction();
       return res.status(200).json(new ApiResponse(200, {}, `Exam details ${operation} successfully for employee id: ${employeeId}`));
     } catch (error) {
@@ -579,6 +595,6 @@ const getAssessmentDetails = async (req, res) => {
 export {
   addBulkTestDataofUsers, addSingleAssessmentDetails, addUser, allUsers, bulkUsersFromFile, getAllBatches,
   getAllModules, getAllTrainees, getAssessmentDetails, getAssessmentsDetailsForSpecificBatch,
-  getAssessmentsForSpecificBatch, getBatch, getTraineeDetails, setUserInactive
+  getAssessmentsForSpecificBatch, getBatch, getTraineeDetails, setUserInactive, addRemark
 };
 
