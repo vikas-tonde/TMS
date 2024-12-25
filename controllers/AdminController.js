@@ -308,7 +308,7 @@ const addRemark = async (req, res) => {
     foundUser.remarks.push({ value: remark, date: date });
     await foundUser.save({ session });
     session.commitTransaction();
-    return res.status(200).json(new ApiResponse(200, foundUser.remarks));
+    return res.status(200).json(new ApiResponse(200, foundUser));
   } catch (e) {
     session.abortTransaction();
     return res.status(500).json(new ApiResponse(500, {}, "Something went wrong"));
