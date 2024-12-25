@@ -40,6 +40,7 @@ const addUsers = async (incomingUsers, session, batchId) => {
   else {
     let usersToBeSaved = await incomingUsers.map((incomingUser) => {
       delete incomingUser.Name;
+      incomingUser.role = 'Trainee';
       incomingUser.batch = batchId;
       return new User(incomingUser);
     });

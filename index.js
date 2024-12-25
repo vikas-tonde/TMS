@@ -2,10 +2,17 @@ import cookieParser from "cookie-parser";
 import cors from 'cors';
 import dotenv from "dotenv";
 import express from "express";
+import path, { dirname } from "path";
+import { fileURLToPath } from 'url';
 import helmet from "helmet";
 import mongoose from "mongoose";
 import morgan from "morgan";
 import os from 'os';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+global.ROOT_DIR =__dirname;
 
 import adminRouter from "./routes/adminRoutes.js";
 import traineeRouter from "./routes/traineeRoutes.js";

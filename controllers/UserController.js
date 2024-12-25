@@ -1,9 +1,7 @@
-import { User } from "../models/User.js";
-import bcrypt from 'bcryptjs';
-import { validationResult } from 'express-validator';
-import { ApiResponse } from "../utils/ApiResponse.js";
+import path from 'path';
 import { Batch } from "../models/Batch.js";
-
+import { User } from "../models/User.js";
+import { ApiResponse } from "../utils/ApiResponse.js";
 const generateAccessAndRefreshTokens = async (employeeId) => {
     try {
         const user = (await User.find({ employeeId: employeeId }))[0];
@@ -20,6 +18,18 @@ const generateAccessAndRefreshTokens = async (employeeId) => {
 }
 
 
+const downloadTraineeSampleFile = async (req, res) => {
+    const filePath = path.join(global.ROOT_DIR, process.env.DOWNLOADABLE_FILE_LOCATION, "TraineeExcelSample.xlsx")
+    console.log(filePath);
+    res.setHeader('Content-Type', 'application/octet-stream');
+    res.setHeader('Content-Disposition', `attachment; filename="TraineeExcelSample.xlsx"`);
+    res.download(filePath, (err) => {
+        if (err) {
+            console.error(`Error while sending file: ${err.message}`);
+            res.status(500).send('Error occurred while downloading the file.');
+        }
+    });
+}
 
 const loginUser = async (req, res) => {
     const { employeeId, password } = req.body;
@@ -122,4 +132,5 @@ const signOut = async (req, res) => {
 
 
 
-export { loginUser, getSelf, getAllUserModules, chanegPassword, signOut };
+export { chanegPassword, downloadTraineeSampleFile, getAllUserModules, getSelf, loginUser, signOut };
+
