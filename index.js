@@ -49,7 +49,7 @@ app.use("/api/trainee", traineeRouter);
 mongoose.connect(process.env.MONGO_URL).then((con) => {
     console.log(`Database connected on Host: ${con.connection.host}`);
 
-    app.listen(port,'0.0.0.0', () => console.log(`Server is runnning on port : http://${hostname}:${port}`));
+    app.listen(port,hostname, () => console.log(`Server is runnning on port : http://${hostname}:${port}`));
 })
     .catch((err) => {
         console.log("MONGO db connection failed !!! ", err);
