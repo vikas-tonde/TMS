@@ -424,7 +424,7 @@ const getAssessmentsForSpecificBatch = async (req, res) => {
     let batchId = req.params.batchId;
     let batch = await Batch.findById(batchId);
     let assessmentType = req.params.assessmentType;
-    let assessments = await Assessment.find({ _id: { $in: batch.assessments }, assessmentType: assessmentType }).select("moduleName assessmentName");
+    let assessments = await Assessment.find({ _id: { $in: batch.assessments }, assessmentType: assessmentType }).select("moduleName assessmentName totalMarks");
     return res.status(200).json(new ApiResponse(200, assessments, "Assessments fetched successfully"));
   } catch (error) {
     console.log(error);
