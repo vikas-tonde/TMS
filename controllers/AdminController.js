@@ -25,8 +25,7 @@ const readExcelFile = async (filePath, sheetName) => {
 
 const validateIncomingUsers = (incomingUsers) => {
   for (let incomingUser of incomingUsers) {
-    if (!(incomingUser?.firstName && incomingUser?.lastName && incomingUser?.email && incomingUser?.password &&
-      incomingUser?.role && incomingUser?.employeeId && incomingUser?.location)) {
+    if (!(incomingUser?.firstName && incomingUser?.lastName && incomingUser?.email && incomingUser?.password && incomingUser?.employeeId && incomingUser?.location)) {
       return false;
     }
   }
@@ -64,11 +63,12 @@ const bulkUsersFromFile = async (req, res, next) => {
     else {
       session.startTransaction();
       var filePath = process.env.FILE_UPLOAD_LOCATION + req.file.filename;
-      const excelData = await readExcelFile(filePath, ["Users"]);
-      const data = xlsx.parse(fs.readFileSync(filePath));
+      const excelData = await readExcelFile(filePath, ["Sheet1"]);
+      // const data = xlsx.parse(fs.readFileSync(filePath));
       let { batchName, location } = req.body;
       let batch = new Batch({ batchName: batchName, location: location, isLatest: true });
-      let { insertedcount, insertedIds } = await addUsers(excelData.Users, session, batch._id);
+      console.log(excelData.Sheet1, "sheet1");
+      let { insertedcount, insertedIds } = await addUsers(excelData.Sheet1, session, batch._id);
       fs.remove(filePath);
       if (!insertedcount) {
         return res.status(500).json(new ApiResponse(500, {}, "Users not saved"));
