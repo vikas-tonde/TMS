@@ -17,6 +17,7 @@ global.ROOT_DIR =__dirname;
 import adminRouter from "./routes/adminRoutes.js";
 import traineeRouter from "./routes/traineeRoutes.js";
 import userRouter from "./routes/userRoutes.js";
+import { populateDB } from "./utils/populateDb.js";
 
 dotenv.config();
 
@@ -50,6 +51,7 @@ mongoose.connect(process.env.MONGO_URL).then((con) => {
     console.log(`Database connected on Host: ${con.connection.host}`);
 
     app.listen(port,hostname, () => console.log(`Server is runnning on port : http://${hostname}:${port}`));
+    populateDB();
 })
     .catch((err) => {
         console.log("MONGO db connection failed !!! ", err);

@@ -9,6 +9,7 @@ import { Batch } from "../models/Batch.js";
 import { User } from "../models/User.js";
 import { UserAssessment } from "../models/UserAssessment.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
+import { Metadata } from '../models/metadata.js';
 
 const readExcelFile = async (filePath, sheetName) => {
   return excelToJson({
@@ -593,9 +594,32 @@ const getAssessmentDetails = async (req, res) => {
 
 }
 
+const getLocations = async (req, res) => {
+  try {
+    let data = await Metadata.findOne({});
+    if (data && data.locations.length > 0) {
+      return res.status(200).json(new ApiResponse(200, data.locations, `${data.locations.length} locations found.`));
+    }
+    return res.status(404).json(new ApiResponse(404, {}, `No locations found.`));
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json(new ApiResponse(500, {}, "Something went wrong while fetching locations."));
+  }
+}
+
+const addLocation = async (req, res) => {
+  let { location } = req.body;
+  try {
+    if (location) {
+    }
+  } catch (error) {
+
+  }
+}
+
 export {
   addBulkTestDataofUsers, addSingleAssessmentDetails, addUser, allUsers, bulkUsersFromFile, getAllBatches,
   getAllModules, getAllTrainees, getAssessmentDetails, getAssessmentsDetailsForSpecificBatch,
-  getAssessmentsForSpecificBatch, getBatch, getTraineeDetails, setUserInactive, addRemark
+  getAssessmentsForSpecificBatch, getBatch, getTraineeDetails, setUserInactive, addRemark, getLocations
 };
 
