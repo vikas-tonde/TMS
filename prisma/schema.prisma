@@ -1,0 +1,100 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Role {
+  id    Int    @id @default(autoincrement())
+  name  String @unique
+  users User[]
+}
+
+model User {
+  id           BigInt           @id @default(autoincrement())
+  employeeId   String           @unique
+  password     String
+  firstName    String
+  lastName     String
+  email        String?          @unique
+  userRole     Int
+  role         Role             @relation(fields: [userRole], references: [id])
+  isActive     Boolean          @default(true)
+  profileImage String?
+  batches      UserBatch[]
+  assessments  UserAssessment[]
+  remarks      Remark[]
+}
+
+model Remark {
+  id     BigInt   @id @default(autoincrement())
+  userId BigInt
+  user   User     @relation(fields: [userId], references: [id])
+  value  String
+  date   DateTime
+}
+
+model Location {
+  id       Int     @id @default(autoincrement())
+  name     String  @unique
+  timezone String?
+  batches  Batch[]
+}
+
+model Batch {
+  id         BigInt      @id @default(autoincrement())
+  batchName  String
+  isLatest   Boolean     @default(true)
+  isActive   Boolean     @default(true)
+  created_at DateTime    @default(now())
+  locationId Int
+  location   Location    @relation(fields: [locationId], references: [id])
+  users      UserBatch[]
+  assessments Assessment[] @relation(name: "assessmentToBatch")
+}
+
+model UserBatch {
+  userId  BigInt
+  batchId BigInt
+  user    User   @relation(fields: [userId], references: [id])
+  batch   Batch  @relation(fields: [batchId], references: [id])
+
+  @@id([userId, batchId])
+}
+
+model Module {
+  id          Int          @id @default(autoincrement())
+  moduleName  String       @unique
+  assessments Assessment[]
+}
+
+model Assessment {
+  id             BigInt           @id @default(autoincrement())
+  moduleId       Int
+  date           DateTime         @default(now())
+  assessmentName String
+  totalMarks     Int
+  assessmentType String
+  module         Module           @relation(fields: [moduleId], references: [id])
+  users          UserAssessment[]
+  batches Batch[] @relation(name: "assessmentToBatch")
+}
+
+model UserAssessment {
+  userId        BigInt
+  assessmentId  BigInt
+  marksObtained Int
+  user         User       @relation(fields: [userId], references: [id])
+  assessment   Assessment @relation(fields: [assessmentId], references: [id])
+
+  @@id([userId, assessmentId])
+}

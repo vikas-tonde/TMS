@@ -1,4 +1,5 @@
 import { check } from 'express-validator';
+import prisma from '../DB/db.config.js';
 
 const validateIncomingBulkUsers = [
     check('batchName', 'Enter the valid name').isLength({ min: 3 }),
@@ -17,9 +18,25 @@ const validateIncomingBulkTest = [
 const validateUser = [
     check('firstName', 'Enter the valid name').isLength({ min: 3 }),
     check('lastName', 'Enter the valid name').isLength({ min: 3 }),
-    check('email', 'Enter the valid email').isEmail(),
+    check('email', 'Enter the valid email').isEmail().custom((value)=>{
+        const user = prisma.user.findUnique({
+            where:{ email: value }
+        });
+        if(user){
+            throw new Error(`User with email ${value} already present`);
+        }
+        return true;
+    }),
     check('password', 'Enter the strong password').isLength({ min: 8 }),
-    check('employeeId', 'Enter the valid employee id').exists({ checkFalsy: true }),
+    check('employeeId', 'Enter the valid employee id').exists({ checkFalsy: true }).custom(async (value)=>{
+        const user = await  prisma.user.findUnique({
+            where:{ employeeId: value }
+        });
+        if(user){
+            throw new Error(`User with employee Id ${value} already present`);
+        }
+        return true;
+    }),
     check('location', 'Enter the valid location').isLength({ min: 3 }),
     check('batch', 'Enter the valid batchId').isLength({ min: 6 }),
     check('role', 'Enter the valid batchId').exists({ checkFalsy: true })  /*.matches([/\b(?:Admin|Trainee)\b/]),*/

@@ -8,11 +8,11 @@ import { validateAddSingleAssessmentDetails, validateIncomingBulkTest, validateI
 const adminRouter = express.Router();
 
 adminRouter.use(authMiddleware);
-adminRouter.use(adminAuthMiddleware)
+adminRouter.use(adminAuthMiddleware);
 adminRouter.post('/bulk/users', upload.single('file'), validateIncomingBulkUsers, bulkUsersFromFile);
 adminRouter.put('/users/user/inactive', setUserInactive);
 adminRouter.put('/users/user/remark', addRemark);
-adminRouter.get('/trainees/info/:batchId', getAllTrainees)
+adminRouter.get('/trainees/info/:batchId', getAllTrainees);
 adminRouter.post('/bulk/test', upload.single('file'), validateIncomingBulkTest, addBulkTestDataofUsers);
 adminRouter.get("/trainees/:location?/:batchName?", allUsers);
 adminRouter.get("/trainee/:employeeId", getTraineeDetails);
@@ -25,7 +25,5 @@ adminRouter.get("/assessments/assessment/:assessmentId", getAssessmentDetails);
 adminRouter.get("/assessments/:batchId/:assessmentType", getAssessmentsForSpecificBatch);
 adminRouter.get("/assessments/:batchId", getAssessmentsDetailsForSpecificBatch);
 adminRouter.get("/locations", getLocations);
-adminRouter.post("/single/test");
-// adminRouter.get("/trainees/dd", get);
 
 export default adminRouter;

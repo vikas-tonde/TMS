@@ -531,7 +531,7 @@ const getAssessmentDetails = async (req, res) => {
               as: "candidate",
               in: {
                 $mergeObjects: [
-                  "$$candidate", // Existing fields in "candidates"
+                  "$$candidate",
                   {
                     details: {
                       $arrayElemAt: [
@@ -622,4 +622,3 @@ export {
   getAllModules, getAllTrainees, getAssessmentDetails, getAssessmentsDetailsForSpecificBatch,
   getAssessmentsForSpecificBatch, getBatch, getTraineeDetails, setUserInactive, addRemark, getLocations
 };
-

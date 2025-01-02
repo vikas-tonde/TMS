@@ -63,9 +63,9 @@ const loginUser = async (req, res) => {
     maxAge: process.env.COOKIE_EXPIRY
   }
   return res
+    .status(200)
     .cookie("accessToken", accessToken, options)
     .cookie("refreshToken", refreshToken, options)
-    .status(200)
     .json(
       new ApiResponse(
         200,
@@ -147,7 +147,7 @@ const addProfileImage = async (req, res) => {
     await user.save({ session });
     await session.commitTransaction();
     session.endSession();
-    return res.status(200).json(new ApiResponse(200, {filename: req.file.filename}, "Image uploaded"));
+    return res.status(200).json(new ApiResponse(200, { filename: req.file.filename }, "Image uploaded"));
   }
   catch (e) {
     await session.abortTransaction();
@@ -157,7 +157,7 @@ const addProfileImage = async (req, res) => {
   }
 }
 
- const getProfileImage = (req, res) => {
+const getProfileImage = (req, res) => {
   const { imageName } = req.params;
   const fullImagePath = path.join(global.ROOT_DIR, process.env.IMAGE_UPLOAD_LOCATION, imageName);
 

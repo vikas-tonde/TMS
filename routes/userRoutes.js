@@ -12,7 +12,7 @@ userRouter.get("/sign-out", signOut);
 userRouter.use(authMiddleware);
 userRouter.get("/", getSelf);
 userRouter.put("/change-password", chanegPassword);
-userRouter.get('/profile/:imageName', getProfileImage, chanegPassword);
+userRouter.get('/profile/:imageName', getProfileImage);
 userRouter.put("/profile/image", imageUpload.single('file'), addProfileImage);
 
 export default userRouter;
