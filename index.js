@@ -44,8 +44,6 @@ app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerOutput, options,));
 app.use(helmet());
 app.use(cookieParser());
 const port = process.env.PORT || 5000;
-// const hostname = os.hostname();
-const hostname = 'localhost';
 
 BigInt.prototype.toJSON = function () {
     return this.toString();
@@ -70,7 +68,7 @@ app.use(rootRouter);
 mongoose.connect(process.env.MONGO_URL).then((con) => {
     console.log(`Database connected on Host: ${con.connection.host}`);
 
-    app.listen(port, "0.0.0.0", () => console.log(`Server is runnning on port : http://${hostname}:${port}`));
+    app.listen(port, "0.0.0.0", () => console.log(`Server is runnning on port : http://localhost:${port}`));
     populateDB();
 })
     .catch((err) => {
