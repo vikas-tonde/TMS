@@ -3,8 +3,8 @@ import { getExams } from "../controllers/TraineeController.js";
 import { authMiddleware } from "../middlewares/authMiddleware.js";
 
 
-const traineeRouter = express.Router();
-traineeRouter.use(authMiddleware);
-traineeRouter.get("/exams", getExams);
+const traineeRouterV2 = express.Router();
+traineeRouterV2.use(authMiddleware);
+traineeRouterV2.get("/exams", getExams);
 
-export default traineeRouter;
+export default traineeRouterV2;
