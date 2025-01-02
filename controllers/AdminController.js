@@ -358,7 +358,7 @@ const getAllModules = async (req, res) => {
 
 const getAllTrainees = async (req, res) => {
   try {
-    let trainees = await User.find({ batch: req.params.batchId }).select("-password -refreshToken -isActive -profileImage -role");
+    let trainees = await User.find({ batch: req.params.batchId }).select("-password -refreshToken -profileImage -role");
     return res.status(200).json(new ApiResponse(200, trainees));
   } catch (error) {
     console.log(error);

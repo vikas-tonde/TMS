@@ -413,6 +413,7 @@ const getAllTrainees = async (req, res) => {
         firstName: true,
         lastName: true,
         email: true,
+        isActive: true
       }
     });
     if (trainees.length) {

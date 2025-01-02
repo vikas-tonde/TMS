@@ -33,6 +33,19 @@ const downloadTraineeSampleFile = async (req, res) => {
   });
 }
 
+const downloadMarksheetSample = async (req, res) => {
+  const filePath = path.join(global.ROOT_DIR, process.env.DOWNLOADABLE_FILE_LOCATION, "SampleMarksheet.xlsx")
+  console.log(filePath);
+  res.setHeader('Content-Type', 'application/octet-stream');
+  res.setHeader('Content-Disposition', `attachment; filename="SampleMarksheet.xlsx"`);
+  res.download(filePath, (err) => {
+    if (err) {
+      console.error(`Error while sending file: ${err.message}`);
+      res.status(500).send('Error occurred while downloading the file.');
+    }
+  });
+}
+
 const loginUser = async (req, res) => {
   const { employeeId, password } = req.body;
 
@@ -173,5 +186,15 @@ const getProfileImage = (req, res) => {
 
 
 
-export { chanegPassword, downloadTraineeSampleFile, getAllUserModules, getSelf, loginUser, signOut, addProfileImage, getProfileImage };
+export { 
+  chanegPassword, 
+  downloadTraineeSampleFile, 
+  getAllUserModules, 
+  getSelf, 
+  loginUser, 
+  signOut, 
+  addProfileImage, 
+  getProfileImage, 
+  downloadMarksheetSample 
+};
 
