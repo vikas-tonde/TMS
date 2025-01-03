@@ -504,6 +504,34 @@ const setUserInactive = async (req, res) => {
     return res.status(400).json(new ApiResponse(400, {}, "User Id is not provided."));
   }
 }
+const setBatchInactive = async (req, res) => {
+  console.log();
+
+  let { batchId, isActive } = req.body;
+  if (userIds?.length > 0) {
+    try {
+      let batch = await prisma.$transaction(async tx => {
+        return await tx.batch.update({
+          where: {
+            id: batchId
+          },
+          data: {
+            isActive: isActive || false
+          }
+        });
+        return count;
+      });
+      return res.status(200).json(new ApiResponse(200, {}, "user(s) have been set to inactive."));
+    } catch (error) {
+      session.abortTransaction();
+      console.log(error);
+      return res.status(500).json(new ApiResponse(500, {}, "Something went wrong while setting user inactive."));
+    }
+  }
+  else {
+    return res.status(400).json(new ApiResponse(400, {}, "User Id is not provided."));
+  }
+}
 
 const getAssessmentsForSpecificBatch = async (req, res) => {
   try {
@@ -662,6 +690,7 @@ export {
   getAllBatches,
   getAllTrainees,
   setUserInactive,
+  setBatchInactive,
   getTraineeDetails,
   bulkUsersFromFile,
   getAssessmentDetails,

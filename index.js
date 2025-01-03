@@ -52,13 +52,9 @@ BigInt.prototype.toJSON = function () {
 app.use(cors({
     credentials: true,
     origin: process.env.CORS_ORIGIN,
-    allowedHeaders: ["Origin", "X-Requested-With", "Content-Type", "Accept", "Authorization", "Origin-Agent-Cluster"]
+    allowedHeaders: ["Origin", "X-Requested-With", "Content-Type", "Accept", "Authorization"]
 }));
-const swaggerMiddleware = (req, res, next) => {
-    res.setHeader('Origin-Agent-Cluster', '?1');
-    next();
-};
-app.use(swaggerMiddleware);
+
 // app.use(bodyParser.json());
 app.use(express.json());
 app.use(rootRouterV2);

@@ -2,6 +2,7 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import prisma from '../../DB/db.config.js';
 import { ApiResponse } from "../../utils/ApiResponse.js";
+import path from 'path';
 
 const isPasswordCorrect = async function (password, originalPassword) {
   return await bcrypt.compare(password, originalPassword);
