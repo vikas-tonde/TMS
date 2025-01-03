@@ -397,7 +397,7 @@ const addUser = async (req, res, next) => {
 }
 
 const setUserInactive = async (req, res) => {
-  let userIds = req.body?.userIds;
+  let {userIds} = req.body?.userIds;
   if (userIds.length > 0) {
     let session = await mongoose.startSession();
     try {

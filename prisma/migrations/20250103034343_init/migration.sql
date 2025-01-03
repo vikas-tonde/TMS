@@ -17,6 +17,7 @@ CREATE TABLE "User" (
     "userRole" INTEGER NOT NULL,
     "isActive" BOOLEAN NOT NULL DEFAULT true,
     "profileImage" TEXT,
+    "locationId" INTEGER NOT NULL,
 
     CONSTRAINT "User_pkey" PRIMARY KEY ("id")
 );
@@ -117,6 +118,9 @@ CREATE INDEX "_assessmentToBatch_B_index" ON "_assessmentToBatch"("B");
 
 -- AddForeignKey
 ALTER TABLE "User" ADD CONSTRAINT "User_userRole_fkey" FOREIGN KEY ("userRole") REFERENCES "Role"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "User" ADD CONSTRAINT "User_locationId_fkey" FOREIGN KEY ("locationId") REFERENCES "Location"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Remark" ADD CONSTRAINT "Remark_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

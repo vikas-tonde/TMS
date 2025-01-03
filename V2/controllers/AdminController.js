@@ -99,6 +99,7 @@ const bulkUsersFromFile = async (req, res, next) => {
             const salt = await bcrypt.genSalt(10);
             user.password = await bcrypt.hash(user.password, salt);
             user.userRole = role.id;
+            user.locationId = locationRecord.id
             usersToBeSaved.push(user);
           }
         }
@@ -149,7 +150,7 @@ const addBulkTestDataofUsers = async (req, res, next) => {
     else {
       var filePath = process.env.FILE_UPLOAD_LOCATION + req.file.filename;
       const excelData = await readExcelFile(filePath, ["Sheet1"]);
-      let batchId = req.body.batchId;
+      let { batchId } = req.body;
       let employeeIds = excelData.Sheet1.map(({ employeeId }) => employeeId);
       let batch = await prisma.batch.findUnique({
         where: { id: BigInt(batchId) }
@@ -253,7 +254,7 @@ const allUsers = async (req, res) => {
       JOIN public."UserAssessment" ua ON u.id = ua."userId"
       JOIN public."Assessment" a ON a.id = ua."assessmentId" 
       WHERE ${clause}
-      GROUP BY u.id;
+      GROUP BY u.id ORDER BY percentage desc;
       `;
     if (result.length) {
       return res.status(200).json(new ApiResponse(200, result));
@@ -282,7 +283,11 @@ const getTraineeDetails = async (req, res) => {
           remarks: true,
           assessments: {
             include: {
-              assessments: true,
+              assessment: {
+                include: {
+                  module: true
+                }
+              }
             },
           },
         },
@@ -291,7 +296,7 @@ const getTraineeDetails = async (req, res) => {
       let totalMarksObtained = 0;
       let totalMarks = 0;
       const assessments = userWithAssessments?.assessments.map((userAssessment) => {
-        let assessment = userAssessment.assessments;
+        let assessment = userAssessment.assessment;
         assessment.marksObtained = userAssessment.marksObtained
         return assessment;
       });
@@ -331,6 +336,18 @@ const addRemark = async (req, res) => {
         where: { employeeId: employeeId },
         data: {
           remarks: { create: { value: remark, date: date } }
+        },
+        include:{
+          remarks:true,
+          assessments: {
+            include: {
+              assessment: {
+                include: {
+                  module: true
+                }
+              }
+            },
+          }
         }
       })
     });
@@ -432,7 +449,7 @@ const addUser = async (req, res) => {
     return res.status(400).json({ errors: errors.array() });
   } else {
     try {
-      const { firstName, lastName, email, password, employeeId, location, batchId, roleId } = req.body;
+      const { firstName, lastName, email, password, employeeId, locationId, batchId, roleId } = req.body;
       const salt = await bcrypt.genSalt(10);
       const hashedPassword = await bcrypt.hash(password, salt);
       let user = await prisma.$transaction(async tx => {
@@ -440,6 +457,7 @@ const addUser = async (req, res) => {
           data: {
             firstName, lastName, employeeId, email,
             password: hashedPassword,
+            location: { connect: locationId },
             batches: { connect: batchId },
             role: { connect: roleId }
           }

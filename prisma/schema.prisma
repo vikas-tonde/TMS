@@ -30,6 +30,8 @@ model User {
   role         Role             @relation(fields: [userRole], references: [id])
   isActive     Boolean          @default(true)
   profileImage String?
+  locationId   Int
+  location     Location         @relation(fields: [locationId], references: [id])
   batches      UserBatch[]
   assessments  UserAssessment[]
   remarks      Remark[]
@@ -48,17 +50,18 @@ model Location {
   name     String  @unique
   timezone String?
   batches  Batch[]
+  users    User[]
 }
 
 model Batch {
-  id         BigInt      @id @default(autoincrement())
-  batchName  String
-  isLatest   Boolean     @default(true)
-  isActive   Boolean     @default(true)
-  created_at DateTime    @default(now())
-  locationId Int
-  location   Location    @relation(fields: [locationId], references: [id])
-  users      UserBatch[]
+  id          BigInt       @id @default(autoincrement())
+  batchName   String
+  isLatest    Boolean      @default(true)
+  isActive    Boolean      @default(true)
+  created_at  DateTime     @default(now())
+  locationId  Int
+  location    Location     @relation(fields: [locationId], references: [id])
+  users       UserBatch[]
   assessments Assessment[] @relation(name: "assessmentToBatch")
 }
 
@@ -86,15 +89,15 @@ model Assessment {
   assessmentType String
   module         Module           @relation(fields: [moduleId], references: [id])
   users          UserAssessment[]
-  batches Batch[] @relation(name: "assessmentToBatch")
+  batches        Batch[]          @relation(name: "assessmentToBatch")
 }
 
 model UserAssessment {
   userId        BigInt
   assessmentId  BigInt
   marksObtained Int
-  user         User       @relation(fields: [userId], references: [id])
-  assessment   Assessment @relation(fields: [assessmentId], references: [id])
+  user          User       @relation(fields: [userId], references: [id])
+  assessment    Assessment @relation(fields: [assessmentId], references: [id])
 
   @@id([userId, assessmentId])
 }

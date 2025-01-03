@@ -93,7 +93,7 @@ const loginUser = async (req, res) => {
 
 const getSelf = (req, res) => {
   return res.status(200).json(
-    new ApiResponse(200, { user: req.user }, "This is your information.")
+    new ApiResponse(200, { user: req.user.id }, "This is your information.")
   );
 }
 const getAllUserModules = async (req, res) => {

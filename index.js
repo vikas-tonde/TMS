@@ -17,7 +17,7 @@ const __dirname = dirname(__filename);
 global.ROOT_DIR = __dirname;
 
 import rootRouter from "./routes/index.js";
-import { populateDB } from "./utils/populateDb.js";
+import { populateDB, populatePostgre } from "./utils/populateDb.js";
 import rootRouterV2 from "./V2/routes/index.js";
 
 const jsonContent = await readFile('./swagger-output.json', 'utf8');
@@ -70,6 +70,7 @@ mongoose.connect(process.env.MONGO_URL).then((con) => {
 
     app.listen(port, "0.0.0.0", () => console.log(`Server is runnning on port : http://localhost:${port}`));
     populateDB();
+    populatePostgre();
 })
     .catch((err) => {
         console.log("MONGO db connection failed !!! ", err);
