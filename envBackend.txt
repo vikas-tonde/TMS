@@ -1,0 +1,11 @@
+PORT=5000
+MONGO_URL=mongodb+srv://vikas:vikas123@cluster0.iwwbr.mongodb.net/TMS
+ACCESS_TOKEN_SECRET=accesstokensecret
+REFRESH_TOKEN_SECRET=refreshtokensecret
+CORS_ORIGIN=localhost:3001
+REFRESH_TOKEN_EXPIRY=10d
+ACCESS_TOKEN_EXPIRY=1d
+FILE_UPLOAD_LOCATION=uploads/
+DOWNLOADABLE_FILE_LOCATION=downloadables/
+IMAGE_UPLOAD_LOCATION=uploads/images/
+DATABASE_URL="postgresql://postgres:root@localhost:5432/TMS"
