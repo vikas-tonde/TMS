@@ -50,21 +50,13 @@ const bulkUsersFromFile = async (req, res, next) => {
       await prisma.$transaction(async tx => {
         let { batchName, location } = req.body;
         let locationRecord = await tx.location.findFirst({
-          where: {
-            name: location
-          }
+          where: { name: location }
         });
         if (!locationRecord) {
-          locationRecord = await tx.location.create({
-            data: {
-              name: location
-            }
-          });
+          return res.status(400).json(new ApiResponse(400, {}, "Invalid value for location"));
         }
         let oldBatch = await tx.batch.updateMany({
-          data: {
-            isLatest: false
-          },
+          data: { isLatest: false },
           where: {
             locationId: locationRecord.id,
             isLatest: true,
@@ -72,25 +64,15 @@ const bulkUsersFromFile = async (req, res, next) => {
         });
 
         let newBatch = await tx.batch.create({
-          data: {
-            batchName: batchName,
-            locationId: locationRecord.id
-          }
+          data: { batchName: batchName, locationId: locationRecord.id }
         });
         let usersToBeSaved = [];
         let usersAlreadyPresent = [];
-        let role = await tx.role.findFirst({
-          where: {
-            name: "Trainee"
-          }
-        });
+        let role = await tx.role.findFirst({ where: { name: "Trainee" } });
 
         for (let user of users) {
           let userAlreadyPresnt = await tx.user.findFirst({
-            where: {
-              email: user.email,
-              employeeId: user.employeeId
-            }
+            where: { email: user.email, employeeId: user.employeeId }
           });
           if (userAlreadyPresnt) {
             usersAlreadyPresent.push(userAlreadyPresnt);
@@ -105,22 +87,15 @@ const bulkUsersFromFile = async (req, res, next) => {
         }
         let savedUsers = [];
         if (usersToBeSaved.length) {
-          savedUsers = await tx.user.createManyAndReturn({
-            data: usersToBeSaved
-          });
+          savedUsers = await tx.user.createManyAndReturn({ data: usersToBeSaved });
         }
 
         users = [...savedUsers, ...usersAlreadyPresent];
         for (const user of users) {
-          userBatches.push({
-            userId: user.id,
-            batchId: newBatch.id,
-          });
+          userBatches.push({ userId: user.id, batchId: newBatch.id, });
         }
         if (userBatches.length) {
-          await tx.userBatch.createMany({
-            data: userBatches
-          });
+          await tx.userBatch.createMany({ data: userBatches });
         }
         return userBatches;
       },
@@ -156,9 +131,7 @@ const addBulkTestDataofUsers = async (req, res, next) => {
         where: { id: BigInt(batchId) }
       });
       let presentIdsSystem = await prisma.user.findMany({
-        where: {
-          employeeId: { in: employeeIds },
-        },
+        where: { employeeId: { in: employeeIds }, },
         select: { employeeId: true }
       });
       let missingIdsSystem = employeeIds.filter(id => !presentIdsSystem.some(obj => obj.employeeId === id));
@@ -167,9 +140,7 @@ const addBulkTestDataofUsers = async (req, res, next) => {
         return res.status(400).json(new ApiResponse(400, {}, missingIdsSystem.join(",") + " users are not present in system."));
       }
       let presentIdsBatch = await prisma.user.findMany({
-        where: {
-          batches: { some: { batchId: batch.id } },
-        },
+        where: { batches: { some: { batchId: batch.id } }, },
         select: { employeeId: true }
       });
       let missingIdsBatch = employeeIds.filter(id => !presentIdsBatch.some(obj => obj.employeeId === id));
@@ -179,9 +150,7 @@ const addBulkTestDataofUsers = async (req, res, next) => {
       const timeout = employeeIds.length * 1000;
       let assessment = await prisma.$transaction(async tx => {
         let module = await tx.module.findFirst({
-          where: {
-            moduleName: req.body.moduleName
-          }
+          where: { moduleName: req.body.moduleName }
         });
         if (!module) {
           module = await tx.module.create({
@@ -192,10 +161,7 @@ const addBulkTestDataofUsers = async (req, res, next) => {
         for (const object of excelData.Sheet1) {
           let user = await tx.user.findUnique({
             where: { employeeId: object.employeeId },
-            select: {
-              id: true,
-              employeeId: true,
-            }
+            select: { id: true, employeeId: true, }
           });
           users.push({ userId: user.id, marksObtained: object.marks })
         }
@@ -323,6 +289,38 @@ const getTraineeDetails = async (req, res) => {
   }
 }
 
+/**
+ * This function is more focused on user management so this function will return only necessary details from users page perspective.
+ */
+const getUserDetails = async (req, res) => {
+  let { employeeId } = req.params;
+  try {
+    if (employeeId) {
+      const user = await prisma.user.findUnique({
+        where: {
+          employeeId: employeeId,
+        },
+        select: {
+          email: true,
+          employeeId: true,
+          firstName: true,
+          lastName: true,
+          id: true,
+          role: true,
+          isActive: true
+        },
+      });
+      if (user) {
+        return res.status(200).json(new ApiResponse(200, user));
+      }
+      return res.status(404).json(new ApiResponse(404, {}, `No user found for employeeId ${employeeId}`));
+    }
+  } catch (e) {
+    console.log(e);
+    return res.status(500).json(new ApiResponse(500, {}, "Something went wrong"));
+  }
+}
+
 const addRemark = async (req, res) => {
   let { employeeId, remark } = req.body;
 
@@ -337,8 +335,8 @@ const addRemark = async (req, res) => {
         data: {
           remarks: { create: { value: remark, date: date } }
         },
-        include:{
-          remarks:true,
+        include: {
+          remarks: true,
           assessments: {
             include: {
               assessment: {
@@ -621,7 +619,7 @@ const getAssessmentDetails = async (req, res) => {
         assessmentType: true,
         date: true,
         id: true,
-        totalMarks:true,
+        totalMarks: true,
         module: { select: { moduleName: true } },
         users: {
           select: {
@@ -690,6 +688,7 @@ export {
   getAllModules,
   getAllBatches,
   getAllTrainees,
+  getUserDetails,
   setUserInactive,
   setBatchInactive,
   getTraineeDetails,

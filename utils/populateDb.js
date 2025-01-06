@@ -15,20 +15,21 @@ export const populateDB = async () => {
 }
 
 export const populatePostgre = async () => {
-    let roles = await prisma.role.findMany({});
+    let roles = await prisma.role.findMany({ select: { id: true } });
     if (!roles.length) {
         await prisma.role.createMany({
             data: [{ name: "Admin" }, { name: "Trainee" }]
         });
     }
-    let locations = await prisma.location.findMany({});
+    let locations = await prisma.location.findMany({ select: { id: true } });
     if (!locations.length) {
         await prisma.location.createMany({
             data: [{ name: "Pune" }, { name: "Banglore" }, { name: "Chennai" }, { name: "Hyderabad" }]
         });
     }
     let user = await prisma.user.findUnique({
-        where: { employeeId: "10431" }
+        where: { employeeId: "10431" },
+        select: { id: true }
     });
     if (!user) {
         const salt = await bcrypt.genSalt(10);
