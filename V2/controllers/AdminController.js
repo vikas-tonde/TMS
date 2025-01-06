@@ -362,15 +362,27 @@ const addRemark = async (req, res) => {
 const getAllBatches = async (req, res) => {
   try {
     let { location } = req.params;
-    let query = {};
+    let query = { isActive: true };
     if (location) {
       let locationRecord = await prisma.location.findFirst({ where: { name: location } });
       if (!locationRecord) {
         return res.status(404).json(new ApiResponse(404, {}, `Location you have sent doesn't exist in database.`));
       }
-      query = { locationId: locationRecord.id };
+      query = { ...query, locationId: locationRecord.id };
     }
     let batches = await prisma.batch.findMany({ where: { ...query } });
+    if (batches?.length) {
+      return res.status(200).json(new ApiResponse(200, batches));
+    }
+    return res.status(404).json(new ApiResponse(404, {}, `No batches found for location ${location}`));
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json(new ApiResponse(500, {}, "Something went wrong"));
+  }
+}
+const getAllBatchesIncludingInactive = async (req, res) => {
+  try {
+    let batches = await prisma.batch.findMany({});
     if (batches?.length) {
       return res.status(200).json(new ApiResponse(200, batches));
     }
@@ -506,18 +518,13 @@ const setBatchInactive = async (req, res) => {
   console.log();
 
   let { batchId, isActive } = req.body;
-  if (userIds?.length > 0) {
+  if (batchId) {
     try {
       let batch = await prisma.$transaction(async tx => {
         return await tx.batch.update({
-          where: {
-            id: batchId
-          },
-          data: {
-            isActive: isActive || false
-          }
+          where: { id: batchId },
+          data: { isActive: isActive || false }
         });
-        return count;
       });
       return res.status(200).json(new ApiResponse(200, {}, "user(s) have been set to inactive."));
     } catch (error) {
@@ -527,7 +534,7 @@ const setBatchInactive = async (req, res) => {
     }
   }
   else {
-    return res.status(400).json(new ApiResponse(400, {}, "User Id is not provided."));
+    return res.status(400).json(new ApiResponse(400, {}, "Batch Id is not provided."));
   }
 }
 
@@ -700,6 +707,7 @@ export {
   getAssessmentDetails,
   addBulkTestDataofUsers,
   addSingleAssessmentDetails,
+  getAllBatchesIncludingInactive,
   getAssessmentsForSpecificBatch,
   getAssessmentsDetailsForSpecificBatch,
 };
