@@ -47,6 +47,7 @@ const loginUser = async (req, res) => {
       email: true,
       employeeId: true,
       password: true,
+      profileImage: true,
       role: {
         select: {
           name: true
