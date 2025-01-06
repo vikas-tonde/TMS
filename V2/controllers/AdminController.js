@@ -539,7 +539,8 @@ const getAssessmentsForSpecificBatch = async (req, res) => {
       where: {
         assessmentType: assessmentType,
         batches: { every: { id: batchId } }
-      }
+      },
+      include: { module: true }
     });
     return res.status(200).json(new ApiResponse(200, assessments, "Assessments fetched successfully"));
   } catch (error) {
@@ -559,6 +560,9 @@ const getAssessmentsDetailsForSpecificBatch = async (req, res) => {
           },
         },
       },
+      include: {
+        module: true
+      }
     });
     return res.status(200).json(new ApiResponse(200, assessments, "Assessments fetched successfully"));
   } catch (error) {
