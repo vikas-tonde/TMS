@@ -557,7 +557,7 @@ const getAssessmentsDetailsForSpecificBatch = async (req, res) => {
       where: {
         batches: {
           some: {
-            id: batchId,
+            id: BigInt(batchId),
           },
         },
       },
@@ -621,6 +621,7 @@ const getAssessmentDetails = async (req, res) => {
         assessmentType: true,
         date: true,
         id: true,
+        totalMarks:true,
         module: { select: { moduleName: true } },
         users: {
           select: {

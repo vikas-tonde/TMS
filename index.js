@@ -32,6 +32,7 @@ dotenv.config();
 // };
 
 const options = {
+    customCss: '.swagger-ui .topbar { display: none }',
     docExpansion: 'none',  // Collapse all sections (tags) by default
     deepLinking: true,     // Enable deep linking (clicking on a section will take you to its URL)
     defaultModelsExpandDepth: -1,  // Hide models by default

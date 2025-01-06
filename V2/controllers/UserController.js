@@ -1,8 +1,9 @@
 import bcrypt from "bcryptjs";
+import fs from 'fs';
 import jwt from "jsonwebtoken";
+import path from 'path';
 import prisma from '../../DB/db.config.js';
 import { ApiResponse } from "../../utils/ApiResponse.js";
-import path from 'path';
 
 const isPasswordCorrect = async function (password, originalPassword) {
   return await bcrypt.compare(password, originalPassword);
@@ -102,6 +103,19 @@ const downloadTraineeSampleFile = async (req, res) => {
   });
 }
 
+const downloadMarksheetSample = async (req, res) => {
+  const filePath = path.join(global.ROOT_DIR, process.env.DOWNLOADABLE_FILE_LOCATION, "SampleMarksheet.xlsx")
+  console.log(filePath);
+  res.setHeader('Content-Type', 'application/octet-stream');
+  res.setHeader('Content-Disposition', `attachment; filename="SampleMarksheet.xlsx"`);
+  res.download(filePath, (err) => {
+    if (err) {
+      console.error(`Error while sending file: ${err.message}`);
+      res.status(500).send('Error occurred while downloading the file.');
+    }
+  });
+}
+
 const getSelf = (req, res) => {
   return res.status(200).json(
     new ApiResponse(200, { user: req.user }, "This is your information.")
@@ -175,7 +189,6 @@ const addProfileImage = async (req, res) => {
       return res.status(200).json(new ApiResponse(200, { filename: req.file.filename }, "Image uploaded"));
     }
     return res.status(500).json(new ApiResponse(500, { filename: req.file.filename }, "Image uploading failed"));
-
   }
   catch (e) {
     console.log(e);
@@ -199,5 +212,8 @@ const getProfileImage = (req, res) => {
 
 
 
-export { loginUser, getSelf, signOut, addProfileImage, getProfileImage, downloadTraineeSampleFile, chanegPassword };
+export {
+  addProfileImage, chanegPassword,
+  downloadMarksheetSample, downloadTraineeSampleFile, getProfileImage, getSelf, loginUser, signOut
+};
 
