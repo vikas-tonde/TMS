@@ -18,8 +18,8 @@ const validateIncomingBulkTest = [
 const validateUser = [
     check('firstName', 'Enter the valid name').isLength({ min: 3 }),
     check('lastName', 'Enter the valid name').isLength({ min: 3 }),
-    check('email', 'Enter the valid email').isEmail().custom((value)=>{
-        const user = prisma.user.findUnique({
+    check('email', 'Enter the valid email').isEmail().custom(async (value)=>{
+        const user = await prisma.user.findUnique({
             where:{ email: value }
         });
         if(user){
@@ -33,13 +33,21 @@ const validateUser = [
             where:{ employeeId: value }
         });
         if(user){
-            throw new Error(`User with employee Id ${value} already present`);
+            throw new Error(`User with employee Id ${value} already present.`);
         }
         return true;
     }),
-    check('location', 'Enter the valid location').isLength({ min: 3 }),
-    check('batch', 'Enter the valid batchId').isLength({ min: 6 }),
-    check('role', 'Enter the valid batchId').exists({ checkFalsy: true })  /*.matches([/\b(?:Admin|Trainee)\b/]),*/
+    check('location', 'Enter the valid location').isLength({ checkFalsy: true }).custom(async (value)=>{
+        const location = await  prisma.location.findFirst({
+            where:{ name: value }
+        });
+        if(!location){
+            throw new Error(`Location with ${value} name does not present in system.`);
+        }
+        return true;
+    }),
+    check('batch', 'Enter the valid batchId').isLength({ min:1 }),
+    check('role', 'Enter the valid role id').exists({ checkFalsy: true })  /*.matches([/\b(?:Admin|Trainee)\b/]),*/
 ];
 
 const validateAddSingleAssessmentDetails = [

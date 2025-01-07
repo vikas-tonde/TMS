@@ -459,19 +459,27 @@ const addUser = async (req, res) => {
     return res.status(400).json({ errors: errors.array() });
   } else {
     try {
-      const { firstName, lastName, email, password, employeeId, locationId, batchId, roleId } = req.body;
+      const { firstName, lastName, email, password, employeeId, location, batch, role } = req.body;
+      console.log(req.body);
+
       const salt = await bcrypt.genSalt(10);
       const hashedPassword = await bcrypt.hash(password, salt);
+      const locationRecord = await prisma.location.findFirst({
+        where: { name: location }
+      });
       let user = await prisma.$transaction(async tx => {
-        return await tx.user.create({
+        let user = await tx.user.create({
           data: {
             firstName, lastName, employeeId, email,
             password: hashedPassword,
-            location: { connect: locationId },
-            batches: { connect: batchId },
-            role: { connect: roleId }
+            location: { connect: { id: locationRecord.id } },
+            role: { connect: { id: parseInt(role) } }
           }
         });
+        await tx.userBatch.create({
+          data: { batchId: BigInt(batch), userId: user.id }
+        });
+        return user;
       });
       if (user) {
         return res.status(200).json(new ApiResponse(200, user, "User registered successfully."));
@@ -680,6 +688,49 @@ const getLocations = async (req, res) => {
   }
 }
 
+const getAllTraineesByLocationsAndNotInBatch = async (req, res) => {
+  let { locationId, batchId } = req.params;
+  if (!locationId || !batchId) {
+    return res.status(400).json(new ApiResponse(400, {}, `Batch Id or location Id is not sent.`));
+  }
+  try {
+    let findBatch = await prisma.batch.findUnique({ where: { id: batchId }, select: { id: true } });
+    if (!findBatch) {
+      return res.status(400).json(new ApiResponse(400, {}, `Invalid batch Id.`));
+    }
+    let findLocation = await prisma.location.findUnique({ where: { id: parseInt(locationId) }, select: { id: true } });
+    if (!findLocation) {
+      return res.status(400).json(new ApiResponse(400, {}, `Invalid location Id.`));
+    }
+    let users = await prisma.user.findMany({
+      where: {
+        batches: { none: { batchId: BigInt(batchId) } },
+        locationId: parseInt(locationId),
+        isActive: true,
+        role: { name: "Trainee" }
+      },
+      select: {
+        id: true,
+        employeeId: true,
+        firstName: true,
+        lastName: true
+      }
+    });
+    return res.status(200).json(new ApiResponse(200, users, `${users.length} users found.`));
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json(new ApiResponse(500, {}, "Something went wrong while fetching trainees."));
+  }
+}
+
+const getAllRoles = async (req, res) => {
+  try {
+    let roles = await prisma.role.findMany({});
+    res.status(200).json(new ApiResponse(200, roles));
+  } catch (error) {
+    return res.status(500).json(new ApiResponse(500, {}, "Something went wrong while fetching roles."));
+  }
+}
 // const addLocation = async (req, res) => {
 //   let { location } = req.body;
 //   try {
@@ -695,6 +746,7 @@ export {
   getBatch,
   allUsers,
   addRemark,
+  getAllRoles,
   getLocations,
   getAllModules,
   getAllBatches,
@@ -710,4 +762,5 @@ export {
   getAllBatchesIncludingInactive,
   getAssessmentsForSpecificBatch,
   getAssessmentsDetailsForSpecificBatch,
+  getAllTraineesByLocationsAndNotInBatch,
 };
