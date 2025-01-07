@@ -523,6 +523,7 @@ const setUserInactive = async (req, res) => {
     return res.status(400).json(new ApiResponse(400, {}, "User Id is not provided."));
   }
 }
+
 const setBatchInactive = async (req, res) => {
   console.log();
 
@@ -732,6 +733,30 @@ const getAllRoles = async (req, res) => {
     return res.status(500).json(new ApiResponse(500, {}, "Something went wrong while fetching roles."));
   }
 }
+
+const deleteAssessment = async (req, res) => {
+  try {
+    let { assessmentId } = req.params;
+    await prisma.assessment.delete({ where: { id: BigInt(assessmentId) } });
+    res.status(200).json(new ApiResponse(200, {}, "Assessment deleted successfully"));
+  }
+  catch (e) {
+    console.log(e);
+    return res.status(500).json(new ApiResponse(500, {}, "Something went wrong while deleting assessment."));
+  }
+}
+
+const deleteUser = async (req, res) => {
+  try {
+    let { userId } = req.params;
+    await prisma.user.delete({ where: { id: BigInt(userId) } });
+    res.status(200).json(new ApiResponse(200, {}, "User deleted successfully"));
+  }
+  catch (e) {
+    console.log(e);
+    return res.status(500).json(new ApiResponse(500, {}, "Something went wrong while deleting user."));
+  }
+}
 // const addLocation = async (req, res) => {
 //   let { location } = req.body;
 //   try {
@@ -746,7 +771,8 @@ export {
   addUser,
   getBatch,
   allUsers,
-  addRemark,
+  addRemark, 
+  deleteUser,
   getAllRoles,
   getLocations,
   getAllModules,
@@ -755,6 +781,7 @@ export {
   getUserDetails,
   setUserInactive,
   setBatchInactive,
+  deleteAssessment,
   getTraineeDetails,
   bulkUsersFromFile,
   getAssessmentDetails,

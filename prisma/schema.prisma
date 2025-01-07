@@ -27,11 +27,11 @@ model User {
   lastName     String
   email        String?          @unique
   userRole     Int
-  role         Role             @relation(fields: [userRole], references: [id])
+  role         Role             @relation(fields: [userRole], references: [id], onDelete: Cascade)
   isActive     Boolean          @default(true)
   profileImage String?
   locationId   Int
-  location     Location         @relation(fields: [locationId], references: [id])
+  location     Location         @relation(fields: [locationId], references: [id], onDelete: Cascade)
   batches      UserBatch[]
   assessments  UserAssessment[]
   remarks      Remark[]
@@ -40,7 +40,7 @@ model User {
 model Remark {
   id     BigInt   @id @default(autoincrement())
   userId BigInt
-  user   User     @relation(fields: [userId], references: [id])
+  user   User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   value  String
   date   DateTime
 }
@@ -60,7 +60,7 @@ model Batch {
   isActive    Boolean      @default(true)
   created_at  DateTime     @default(now())
   locationId  Int
-  location    Location     @relation(fields: [locationId], references: [id])
+  location    Location     @relation(fields: [locationId], references: [id], onDelete: Cascade)
   users       UserBatch[]
   assessments Assessment[] @relation(name: "assessmentToBatch")
 }
@@ -68,8 +68,8 @@ model Batch {
 model UserBatch {
   userId  BigInt
   batchId BigInt
-  user    User   @relation(fields: [userId], references: [id])
-  batch   Batch  @relation(fields: [batchId], references: [id])
+  user    User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  batch   Batch  @relation(fields: [batchId], references: [id], onDelete: Cascade)
 
   @@id([userId, batchId])
 }
@@ -87,7 +87,7 @@ model Assessment {
   assessmentName String
   totalMarks     Int
   assessmentType String
-  module         Module           @relation(fields: [moduleId], references: [id])
+  module         Module           @relation(fields: [moduleId], references: [id], onDelete: Cascade)
   users          UserAssessment[]
   batches        Batch[]          @relation(name: "assessmentToBatch")
 }
@@ -96,8 +96,8 @@ model UserAssessment {
   userId        BigInt
   assessmentId  BigInt
   marksObtained Int
-  user          User       @relation(fields: [userId], references: [id])
-  assessment    Assessment @relation(fields: [assessmentId], references: [id])
+  user          User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  assessment    Assessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
 
   @@id([userId, assessmentId])
 }

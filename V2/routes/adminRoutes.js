@@ -1,6 +1,6 @@
 import express from "express";
 import { validateAddSingleAssessmentDetails, validateIncomingBulkTest, validateIncomingBulkUsers, validateUser } from "../../validations/AdminRouteValidations.js";
-import { addBulkTestDataofUsers, addRemark, addSingleAssessmentDetails, addUser, allUsers, bulkUsersFromFile, getAllBatches, getAllBatchesIncludingInactive, getAllModules, getAllRoles, getAllTrainees, getAllTraineesByLocationsAndNotInBatch, getAssessmentDetails, getAssessmentsDetailsForSpecificBatch, getAssessmentsForSpecificBatch, getBatch, getLocations, getTraineeDetails, getUserDetails, setBatchInactive, setUserInactive } from "../controllers/AdminController.js";
+import { addBulkTestDataofUsers, addRemark, addSingleAssessmentDetails, addUser, allUsers, bulkUsersFromFile, deleteAssessment, deleteUser, getAllBatches, getAllBatchesIncludingInactive, getAllModules, getAllRoles, getAllTrainees, getAllTraineesByLocationsAndNotInBatch, getAssessmentDetails, getAssessmentsDetailsForSpecificBatch, getAssessmentsForSpecificBatch, getBatch, getLocations, getTraineeDetails, getUserDetails, setBatchInactive, setUserInactive } from "../controllers/AdminController.js";
 import { adminAuthMiddleware } from "../middlewares/adminAuthMiddleware.js";
 import { authMiddleware } from "../middlewares/authMiddleware.js";
 import { upload } from "../middlewares/multerMiddleware.js";
@@ -43,4 +43,7 @@ adminRouterV2.get("/assessments/:batchId", getAssessmentsDetailsForSpecificBatch
 adminRouterV2.get("/users/trainees/:batchId/:locationId", getAllTraineesByLocationsAndNotInBatch);
 adminRouterV2.get("/locations", getLocations);
 
+// adminRouterV2.delete("/batch/:batchId", )
+adminRouterV2.delete("/assessment/:assessmentId", deleteAssessment);
+adminRouterV2.delete("/user/:userId", deleteUser);
 export default adminRouterV2;
