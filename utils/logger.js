@@ -31,14 +31,14 @@ const logger = winston.createLogger({
 });
 
 // Handle uncaught exceptions
-winston.exceptions.handle(
-  new winston.transports.Console(),
-  new winston.transports.File({ filename: 'logs/exceptions.log' })
-);
+// winston.exceptions.handle(
+//   new winston.transports.Console(),
+//   new winston.transports.File({ filename: 'logs/exceptions.log' })
+// );
 
-// Handle unhandled promise rejections
-process.on('unhandledRejection', (ex) => {
-  throw ex;
-});
+// // Handle unhandled promise rejections
+// process.on('unhandledRejection', (ex) => {
+//   throw ex;
+// });
 
 export default logger;

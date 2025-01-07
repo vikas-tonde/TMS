@@ -51,7 +51,7 @@ const validateUser = [
 ];
 
 const validateAddSingleAssessmentDetails = [
-    check('assessmentId', 'Enter the vallid assessment id.').isLength(24),
+    check('assessmentId', 'Enter the vallid assessment id.').isLength({ checkFalsy: true }),
     check('employeeId', 'Enter the valid employee id').exists({ checkFalsy: true }),
     check('obtainedMarks', 'Enter the marks obtained.').isNumeric().exists({ checkFalsy: true })
 ];
