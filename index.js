@@ -6,8 +6,7 @@ import { readFile } from 'fs/promises';
 import helmet from "helmet";
 import mongoose from "mongoose";
 import morgan from "morgan";
-import os from 'os';
-import { dirname } from "path";
+import path, { dirname } from "path";
 import swaggerUi from 'swagger-ui-express';
 import { fileURLToPath } from 'url';
 
@@ -19,6 +18,7 @@ global.ROOT_DIR = __dirname;
 import rootRouter from "./routes/index.js";
 import { populateDB, populatePostgre } from "./utils/populateDb.js";
 import rootRouterV2 from "./V2/routes/index.js";
+import logger from "./utils/logger.js";
 
 const jsonContent = await readFile('./swagger-output.json', 'utf8');
 const swaggerOutput = JSON.parse(jsonContent);
@@ -39,8 +39,10 @@ const options = {
     layout: "BaseLayout",  // Optional: Set a custom layout if needed,
     customSiteTitle: "TMS API documentation"
 };
+
+
 const app = express();
-app.use(morgan('dev'));
+app.use(morgan('combined', { stream: { write: (message) => logger.info(message.trim()) } }));
 app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerOutput, options,));
 app.use(helmet());
 app.use(cookieParser());
