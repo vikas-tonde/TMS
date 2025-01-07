@@ -43,7 +43,7 @@ const options = {
 
 const app = express();
 // app.use(morgan('combined', { stream: { write: (message) => logger.info(message.trim()) } }));
-app.use(morgan('combined'));
+app.use(morgan('dev'));
 app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerOutput, options,));
 app.use(helmet());
 app.use(cookieParser());

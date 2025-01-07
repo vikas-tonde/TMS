@@ -437,6 +437,7 @@ const getAllTrainees = async (req, res) => {
         }
       },
       select: {
+        id: true,
         employeeId: true,
         firstName: true,
         lastName: true,
@@ -771,7 +772,7 @@ export {
   addUser,
   getBatch,
   allUsers,
-  addRemark, 
+  addRemark,
   deleteUser,
   getAllRoles,
   getLocations,

@@ -45,5 +45,5 @@ adminRouterV2.get("/locations", getLocations);
 
 // adminRouterV2.delete("/batch/:batchId", )
 adminRouterV2.delete("/assessment/:assessmentId", deleteAssessment);
-adminRouterV2.delete("/user/:userId", deleteUser);
+adminRouterV2.delete("/user/delete/:userId", deleteUser);
 export default adminRouterV2;
