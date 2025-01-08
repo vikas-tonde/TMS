@@ -544,11 +544,10 @@ const setBatchInactive = async (req, res) => {
           data: { isActive: isActive || false }
         });
       });
-      return res.status(200).json(new ApiResponse(200, {}, "user(s) have been set to inactive."));
+      return res.status(200).json(new ApiResponse(200, {}, `Batch have been set to ${isActive? "Active":"Inactive"}.`));
     } catch (error) {
-      session.abortTransaction();
       console.log(error);
-      return res.status(500).json(new ApiResponse(500, {}, "Something went wrong while setting user inactive."));
+      return res.status(500).json(new ApiResponse(500, {}, "Something went wrong while setting batch inactive."));
     }
   }
   else {
