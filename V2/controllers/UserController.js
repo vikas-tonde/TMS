@@ -140,7 +140,7 @@ const chanegPassword = async (req, res) => {
       return res.status(400).json(new ApiResponse(400, {}, "Both password strings doesn't match with each other."));
     }
     const salt = await bcrypt.genSalt(10);
-    let hashedPassword = await bcrypt.hash(user.password, salt);
+    let hashedPassword = await bcrypt.hash(newPassword, salt);
     let user = await prisma.user.update({
       where: { employeeId: req.user.employeeId },
       data: { password: hashedPassword }
