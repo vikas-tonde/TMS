@@ -73,7 +73,7 @@ const bulkUsersFromFile = async (req, res, next) => {
 
         for (let user of users) {
           let userAlreadyPresnt = await tx.user.findFirst({
-            where: { email: user.email, employeeId: user.employeeId }
+            where: { email: user.email, employeeId: String(user.employeeId) }
           });
           if (userAlreadyPresnt) {
             usersAlreadyPresent.push(userAlreadyPresnt);
@@ -82,7 +82,8 @@ const bulkUsersFromFile = async (req, res, next) => {
             const salt = await bcrypt.genSalt(10);
             user.password = await bcrypt.hash(user.password, salt);
             user.userRole = role.id;
-            user.locationId = locationRecord.id
+            user.locationId = locationRecord.id;
+            user.employeeId = String(user.employeeId);
             usersToBeSaved.push(user);
           }
         }
@@ -208,9 +209,10 @@ const allUsers = async (req, res) => {
       return res.status(400).json(new ApiResponse(400, {}, "Wrong location sent..."));
     }
 
-    let clause = Prisma.sql`b."id" = ${batchId} AND b."locationId" = ${locationRecord.id}`;
-    if (!batchId) {
-      clause = Prisma.sql`b."locationId" = ${locationRecord.id} AND b."isLatest" = true`;
+    let clause = Prisma.sql`b."locationId" = ${locationRecord.id} AND b."isLatest" = true`;
+    console.log(batchId, "BatchId");
+    if (batchId) {
+      clause = Prisma.sql`b."id" = ${BigInt(batchId)} AND b."locationId" = ${locationRecord.id}`;
     }
     const result = await prisma.$queryRaw`
       SELECT u."employeeId", u.id::text, u."firstName", u."lastName", u.email, u."profileImage", 
