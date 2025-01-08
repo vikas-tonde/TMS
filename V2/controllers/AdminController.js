@@ -381,6 +381,7 @@ const getAllBatches = async (req, res) => {
     return res.status(500).json(new ApiResponse(500, {}, "Something went wrong"));
   }
 }
+
 const getAllBatchesIncludingInactive = async (req, res) => {
   try {
     let batches = await prisma.batch.findMany({});
@@ -745,7 +746,7 @@ const deleteAssessment = async (req, res) => {
   try {
     let { assessmentId } = req.params;
     await prisma.assessment.delete({ where: { id: BigInt(assessmentId) } });
-    res.status(200).json(new ApiResponse(200, {}, "Assessment deleted successfully"));
+    return res.status(200).json(new ApiResponse(200, {}, "Assessment deleted successfully"));
   }
   catch (e) {
     console.log(e);
@@ -757,12 +758,32 @@ const deleteUser = async (req, res) => {
   try {
     let { userId } = req.params;
     await prisma.user.delete({ where: { id: BigInt(userId) } });
-    res.status(200).json(new ApiResponse(200, {}, "User deleted successfully"));
+    return res.status(200).json(new ApiResponse(200, {}, "User deleted successfully"));
   }
   catch (e) {
     console.log(e);
     return res.status(500).json(new ApiResponse(500, {}, "Something went wrong while deleting user."));
   }
+}
+
+const addBatchForExistingUser = async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+  try {
+    const { employeeId, batchId, location } = req.body;
+    const user = await prisma.user.findUnique({ where: { employeeId: employeeId } });
+    const batch = await prisma.batch.findUnique({ where: { id: BigInt(batchId) } });
+    let result = await prisma.$transaction(async (tx) => {
+      return await tx.userBatch.create({ data: { userId: user.id, batchId: batch.id } });
+    });
+    return res.status(200).json(new ApiResponse(200, {}, "User added into batch successfully"));
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json(new ApiResponse(500, {}, "Something went wrong while adding user in batch."));
+  }
+
 }
 // const addLocation = async (req, res) => {
 //   let { location } = req.body;
@@ -793,6 +814,7 @@ export {
   bulkUsersFromFile,
   getAssessmentDetails,
   addBulkTestDataofUsers,
+  addBatchForExistingUser,
   addSingleAssessmentDetails,
   getAllBatchesIncludingInactive,
   getAssessmentsForSpecificBatch,

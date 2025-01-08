@@ -1,6 +1,6 @@
 import express from "express";
-import { validateAddSingleAssessmentDetails, validateIncomingBulkTest, validateIncomingBulkUsers, validateUser } from "../../validations/AdminRouteValidations.js";
-import { addBulkTestDataofUsers, addRemark, addSingleAssessmentDetails, addUser, allUsers, bulkUsersFromFile, deleteAssessment, deleteUser, getAllBatches, getAllBatchesIncludingInactive, getAllModules, getAllRoles, getAllTrainees, getAllTraineesByLocationsAndNotInBatch, getAssessmentDetails, getAssessmentsDetailsForSpecificBatch, getAssessmentsForSpecificBatch, getBatch, getLocations, getTraineeDetails, getUserDetails, setBatchInactive, setUserInactive } from "../controllers/AdminController.js";
+import { validateAddSingleAssessmentDetails, validateExistingUserInBatch, validateIncomingBulkTest, validateIncomingBulkUsers, validateUser } from "../../validations/AdminRouteValidations.js";
+import { addBatchForExistingUser, addBulkTestDataofUsers, addRemark, addSingleAssessmentDetails, addUser, allUsers, bulkUsersFromFile, deleteAssessment, deleteUser, getAllBatches, getAllBatchesIncludingInactive, getAllModules, getAllRoles, getAllTrainees, getAllTraineesByLocationsAndNotInBatch, getAssessmentDetails, getAssessmentsDetailsForSpecificBatch, getAssessmentsForSpecificBatch, getBatch, getLocations, getTraineeDetails, getUserDetails, setBatchInactive, setUserInactive } from "../controllers/AdminController.js";
 import { adminAuthMiddleware } from "../middlewares/adminAuthMiddleware.js";
 import { authMiddleware } from "../middlewares/authMiddleware.js";
 import { upload } from "../middlewares/multerMiddleware.js";
@@ -14,6 +14,7 @@ adminRouterV2.post('/bulk/users', upload.single('file'), validateIncomingBulkUse
 adminRouterV2.put('/users/toggle-active', setUserInactive);
 adminRouterV2.put('/batch/toggle-active', setBatchInactive);
 adminRouterV2.put('/users/user/remark', addRemark);
+adminRouterV2.put('/users/user/add/batch', validateExistingUserInBatch, addBatchForExistingUser);
 adminRouterV2.get('/trainees/info/:batchId', getAllTrainees);
 adminRouterV2.post('/bulk/test', upload.single('file'), validateIncomingBulkTest, addBulkTestDataofUsers);
 adminRouterV2.get("/trainees/:location?/:batchId?", allUsers);
