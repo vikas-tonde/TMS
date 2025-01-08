@@ -40,7 +40,7 @@ adminRouterV2.post("/single/assessment", validateAddSingleAssessmentDetails, add
 adminRouterV2.get("/assessments/assessment/:assessmentId", getAssessmentDetails);
 adminRouterV2.get("/assessments/:batchId/:assessmentType", getAssessmentsForSpecificBatch); 
 adminRouterV2.get("/assessments/:batchId", getAssessmentsDetailsForSpecificBatch);
-adminRouterV2.get("/users/trainees/:batchId/:locationId", getAllTraineesByLocationsAndNotInBatch);
+adminRouterV2.get("/users/trainees/:batchId/:location", getAllTraineesByLocationsAndNotInBatch);
 adminRouterV2.get("/locations", getLocations);
 
 // adminRouterV2.delete("/batch/:batchId", )
