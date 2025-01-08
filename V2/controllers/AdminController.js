@@ -128,7 +128,7 @@ const addBulkTestDataofUsers = async (req, res, next) => {
       var filePath = process.env.FILE_UPLOAD_LOCATION + req.file.filename;
       const excelData = await readExcelFile(filePath, ["Sheet1"]);
       let { batchId } = req.body;
-      let employeeIds = excelData.Sheet1.map(({ employeeId }) => employeeId);
+      let employeeIds = excelData.Sheet1.map(({ employeeId }) => String(employeeId));
       let batch = await prisma.batch.findUnique({
         where: { id: BigInt(batchId) }
       });
@@ -162,7 +162,7 @@ const addBulkTestDataofUsers = async (req, res, next) => {
         let users = [];
         for (const object of excelData.Sheet1) {
           let user = await tx.user.findUnique({
-            where: { employeeId: object.employeeId },
+            where: { employeeId: String(object.employeeId) },
             select: { id: true, employeeId: true, }
           });
           users.push({ userId: user.id, marksObtained: object.marks })
