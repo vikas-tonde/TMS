@@ -224,7 +224,8 @@ const allUsers = async (req, res) => {
       JOIN public."UserBatch" ub ON u.id = ub."userId"
       JOIN public."Batch" b ON b.id = ub."batchId"
       JOIN public."UserAssessment" ua ON u.id = ua."userId"
-      JOIN public."Assessment" a ON a.id = ua."assessmentId" 
+      JOIN public."Assessment" a ON a.id = ua."assessmentId"
+      JOIN "_assessmentToBatch" ab ON ab."B" = b.id
       WHERE ${clause} and u."isActive"=true
       GROUP BY u.id ORDER BY percentage desc;
       `;
