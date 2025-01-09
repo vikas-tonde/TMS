@@ -206,12 +206,15 @@ const allUsers = async (req, res) => {
     });
 
     if (!locationRecord) {
-      return res.status(400).json(new ApiResponse(400, {}, "Wrong location sent..."));
+      return res.status(400).json(new ApiResponse(400, {}, "Invalid location..."));
     }
 
     let clause = Prisma.sql`b."locationId" = ${locationRecord.id} AND b."isLatest" = true`;
-    console.log(batchId, "BatchId");
     if (batchId) {
+      let batchRecord = await prisma.batch.findUnique({ where: { id: batchId } });
+      if (!batchRecord) {
+        return res.status(400).json(new ApiResponse(400, {}, "Invalid batch Id...."));
+      }
       clause = Prisma.sql`b."id" = ${BigInt(batchId)} AND b."locationId" = ${locationRecord.id}`;
     }
     const result = await prisma.$queryRaw`
@@ -546,7 +549,7 @@ const setBatchInactive = async (req, res) => {
           data: { isActive: isActive || false }
         });
       });
-      return res.status(200).json(new ApiResponse(200, {}, `Batch have been set to ${isActive? "Active":"Inactive"}.`));
+      return res.status(200).json(new ApiResponse(200, {}, `Batch have been set to ${isActive ? "Active" : "Inactive"}.`));
     } catch (error) {
       console.log(error);
       return res.status(500).json(new ApiResponse(500, {}, "Something went wrong while setting batch inactive."));
@@ -766,6 +769,17 @@ const deleteUser = async (req, res) => {
     return res.status(500).json(new ApiResponse(500, {}, "Something went wrong while deleting user."));
   }
 }
+const deleteBatch = async (req, res) => {
+  try {
+    let { batchId } = req.params;
+    await prisma.batch.delete({ where: { id: BigInt(batchId) } });
+    return res.status(200).json(new ApiResponse(200, {}, "Batch deleted successfully"));
+  }
+  catch (e) {
+    console.log(e);
+    return res.status(500).json(new ApiResponse(500, {}, "Something went wrong while deleting batch."));
+  }
+}
 
 const addBatchForExistingUser = async (req, res) => {
   const errors = validationResult(req);
@@ -802,6 +816,7 @@ export {
   allUsers,
   addRemark,
   deleteUser,
+  deleteBatch,
   getAllRoles,
   getLocations,
   getAllModules,

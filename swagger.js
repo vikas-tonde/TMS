@@ -13,7 +13,7 @@ const doc = {
         },
         {
             "name": "V2",
-            "description": "This is version one which is designed with SQL database i.e., PostgresSQL"
+            "description": "This is version two which is designed with SQL database i.e., PostgresSQL"
         }
     ]
 };
