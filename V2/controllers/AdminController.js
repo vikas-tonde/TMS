@@ -526,7 +526,7 @@ const setUserInactive = async (req, res) => {
         });
         return count;
       });
-      return res.status(200).json(new ApiResponse(200, {}, "user(s) have been set to inactive."));
+      return res.status(200).json(new ApiResponse(200, {}, `user have been set to ${isActive ? "Active" : "Inactive"}.`));
     } catch (error) {
       session.abortTransaction();
       console.log(error);
