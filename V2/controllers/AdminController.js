@@ -833,6 +833,10 @@ const updateUserDetails = async (req, res) => {
       where: { employeeId: String(employeeId) },
       include: { location: true, role: true }
     });
+    let areValuesFilled = (firstName || lastName || location || role || user.isActive == isActive);
+    if(!areValuesFilled){
+      return res.status(400).json(new ApiResponse(400, {}, "All values are empty, nothing to update."));
+    }
     let newUser = {};
     if (role && role != user.role.name) {
       let roleRecord = await prisma.role.findUnique({ where: { name: role } });
@@ -859,13 +863,16 @@ const updateUserDetails = async (req, res) => {
     if (isActive && lastName != user.lastName) {
       newUser.lastName = lastName;
     }
+    if (Object.keys(newUser).length === 0) {
+      return res.status(200).json(new ApiResponse(200, {}, "Given location does not exist in system."));
+    }
     let savedUser = await prisma.$transaction(async tx => {
       return await tx.user.update({
         where: { employeeId: String(employeeId) },
         data: newUser
       });
     });
-    if(savedUser){
+    if (savedUser) {
       return res.status(200).json(new ApiResponse(200, savedUser, "User details updated successfully."));
     }
   } catch (error) {
