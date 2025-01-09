@@ -314,7 +314,8 @@ const getUserDetails = async (req, res) => {
           lastName: true,
           id: true,
           role: true,
-          isActive: true
+          isActive: true,
+          location: true
         },
       });
       if (user) {
@@ -770,6 +771,7 @@ const deleteUser = async (req, res) => {
     return res.status(500).json(new ApiResponse(500, {}, "Something went wrong while deleting user."));
   }
 }
+
 const deleteBatch = async (req, res) => {
   try {
     let { batchId } = req.params;
@@ -801,6 +803,76 @@ const addBatchForExistingUser = async (req, res) => {
   }
 
 }
+
+const resetPassword = async (req, res) => {
+  try {
+    let { employeeId } = req.params;
+    let user = await prisma.user.findUnique({
+      where: { employeeId: String(employeeId) },
+      select: { id: true, firstName: true }
+    });
+    if (!user) {
+      return res.status(400).json(new ApiResponse(400, {}, "Employee does not exist in system."));
+    }
+    let password = user.firstName + "@123";
+    let salt = await bcrypt.genSalt(10);
+    password = bcrypt.hash(password, salt);
+    user = await prisma.user.update({ where: { id: user.id }, data: { password: password } });
+    return res.status(200).json(new ApiResponse(200, {}, "Password is set with <firstName>@123."));
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json(new ApiResponse(500, {}, "Something went wrong while resetting password."));
+  }
+}
+
+const updateUserDetails = async (req, res) => {
+  try {
+    let { employeeId } = req.params;
+    let { firstName, lastName, isActive, location, role } = req.body;
+    let user = await prisma.user.findUnique({
+      where: { employeeId: String(employeeId) },
+      include: { location: true, role: true }
+    });
+    let newUser = {};
+    if (role && role != user.role.name) {
+      let roleRecord = await prisma.role.findUnique({ where: { name: role } });
+      if (!roleRecord) {
+        return res.status(400).json(new ApiResponse(400, {}, "Given role does not exist in system."));
+      }
+      newUser.userRole = roleRecord.id;
+    }
+    if (location && location != user.location.name) {
+      let locationRecord = await prisma.location.findUnique({ where: { name: location } });
+      if (!locationRecord) {
+        return res.status(400).json(new ApiResponse(400, {}, "Given location does not exist in system."));
+      }
+      newUser.locationId = locationRecord.id;
+    }
+    if (firstName && firstName != user.firstName) {
+      newUser.firstName = firstName;
+    }
+
+    if (lastName && lastName != user.lastName) {
+      newUser.lastName = lastName;
+    }
+
+    if (isActive && lastName != user.lastName) {
+      newUser.lastName = lastName;
+    }
+    let savedUser = await prisma.$transaction(async tx => {
+      return await tx.user.update({
+        where: { employeeId: String(employeeId) },
+        data: newUser
+      });
+    });
+    if(savedUser){
+      return res.status(200).json(new ApiResponse(200, savedUser, "User details updated successfully."));
+    }
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json(new ApiResponse(500, {}, "Something went wrong while updating user details."));
+  }
+}
 // const addLocation = async (req, res) => {
 //   let { location } = req.body;
 //   try {
@@ -821,6 +893,7 @@ export {
   getAllRoles,
   getLocations,
   getAllModules,
+  resetPassword,
   getAllBatches,
   getAllTrainees,
   getUserDetails,
@@ -828,6 +901,7 @@ export {
   setBatchInactive,
   deleteAssessment,
   getTraineeDetails,
+  updateUserDetails,
   bulkUsersFromFile,
   getAssessmentDetails,
   addBulkTestDataofUsers,
