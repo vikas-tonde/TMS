@@ -864,7 +864,7 @@ const updateUserDetails = async (req, res) => {
       newUser.lastName = lastName;
     }
     if (Object.keys(newUser).length === 0) {
-      return res.status(200).json(new ApiResponse(200, {}, "Given location does not exist in system."));
+      return res.status(200).json(new ApiResponse(200, {}, "No changes needed."));
     }
     let savedUser = await prisma.$transaction(async tx => {
       return await tx.user.update({
