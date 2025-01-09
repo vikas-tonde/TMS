@@ -816,9 +816,9 @@ const resetPassword = async (req, res) => {
     }
     let password = user.firstName + "@123";
     let salt = await bcrypt.genSalt(10);
-    password = bcrypt.hash(password, salt);
+    password = await bcrypt.hash(password, salt);
     user = await prisma.user.update({ where: { id: user.id }, data: { password: password } });
-    return res.status(200).json(new ApiResponse(200, {}, "Password is set with <firstName>@123."));
+    return res.status(200).json(new ApiResponse(200, {}, `Password is set with ${user.firstName}@123.`));
   } catch (error) {
     console.log(error);
     return res.status(500).json(new ApiResponse(500, {}, "Something went wrong while resetting password."));

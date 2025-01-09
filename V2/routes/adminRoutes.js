@@ -46,8 +46,8 @@ adminRouterV2.put('/users/toggle-active', setUserInactive);
 adminRouterV2.put('/batch/toggle-active', setBatchInactive);
 adminRouterV2.put('/users/user/remark', addRemark);
 adminRouterV2.put('/users/user/add/batch', validateExistingUserInBatch, addBatchForExistingUser);
-adminRouterV2.put("user/:employeeId/reset-password", resetPassword);
-adminRouterV2.put("user/:employeeId", updateUserDetails);
+adminRouterV2.put("/user/:employeeId/reset-password", resetPassword);
+adminRouterV2.put("/user/:employeeId", updateUserDetails);
 
 adminRouterV2.delete("/assessment/:assessmentId", deleteAssessment);
 adminRouterV2.delete("/user/delete/:userId", deleteUser);
