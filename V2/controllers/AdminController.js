@@ -860,9 +860,10 @@ const updateUserDetails = async (req, res) => {
       newUser.lastName = lastName;
     }
 
-    if (isActive && lastName != user.lastName) {
-      newUser.lastName = lastName;
+    if (isActive != user.isActive) {
+      newUser.isActive = isActive;
     }
+
     if (Object.keys(newUser).length === 0) {
       return res.status(200).json(new ApiResponse(200, {}, "No changes needed."));
     }
