@@ -278,7 +278,7 @@ const getTraineeDetails = async (req, res) => {
         totalMarksObtained += assessment.marksObtained;
         totalMarks += assessment.totalMarks;
       });
-      console.log(userWithAssessments);
+      
       // Calculate percentage
       let percentage = 0;
       if (totalMarks) {

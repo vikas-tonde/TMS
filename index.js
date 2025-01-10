@@ -4,9 +4,8 @@ import dotenv from "dotenv";
 import express from "express";
 import { readFile } from 'fs/promises';
 import helmet from "helmet";
-import mongoose from "mongoose";
 import morgan from "morgan";
-import path, { dirname } from "path";
+import { dirname } from "path";
 import swaggerUi from 'swagger-ui-express';
 import { fileURLToPath } from 'url';
 
@@ -15,10 +14,8 @@ const __dirname = dirname(__filename);
 
 global.ROOT_DIR = __dirname;
 
-import rootRouter from "./routes/index.js";
-import { populateDB, populatePostgre } from "./utils/populateDb.js";
+import { populatePostgre } from "./utils/populateDb.js";
 import rootRouterV2 from "./V2/routes/index.js";
-import logger from "./utils/logger.js";
 
 const jsonContent = await readFile('./swagger-output.json', 'utf8');
 const swaggerOutput = JSON.parse(jsonContent);
@@ -59,21 +56,20 @@ app.use(cors({
     allowedHeaders: ["Origin", "X-Requested-With", "Content-Type", "Accept", "Authorization"]
 }));
 
-// app.use(bodyParser.json());
 app.use(express.json());
 app.use(rootRouterV2);
-app.use(rootRouter);
+// app.use(rootRouter);
 
 // var server = https.createServer(options, app);
-mongoose.connect(process.env.MONGO_URL).then((con) => {
-    console.log(`Database connected on Host: ${con.connection.host}`);
 
-    app.listen(port, "0.0.0.0", () => console.log(`Server is runnning on port : http://localhost:${port}`));
-    populateDB();
-    populatePostgre();
-})
-    .catch((err) => {
-        console.log("MONGO db connection failed !!! ", err);
-        throw err;
-    });
+await populatePostgre();
+app.listen(port, "0.0.0.0", () => console.log(`Server is runnning on port : http://localhost:${port}`));
+// mongoose.connect(process.env.MONGO_URL).then((con) => {
+//     console.log(`Database connected on Host: ${con.connection.host}`);
+//     populateDB();
+// })
+//     .catch((err) => {
+//         console.log("MONGO db connection failed !!! ", err);
+//         throw err;
+//     });
 
