@@ -278,7 +278,7 @@ const getTraineeDetails = async (req, res) => {
         totalMarksObtained += assessment.marksObtained;
         totalMarks += assessment.totalMarks;
       });
-      
+
       // Calculate percentage
       let percentage = 0;
       if (totalMarks) {
@@ -834,7 +834,7 @@ const updateUserDetails = async (req, res) => {
       include: { location: true, role: true }
     });
     let areValuesFilled = (firstName || lastName || location || role || user.isActive == isActive);
-    if(!areValuesFilled){
+    if (!areValuesFilled) {
       return res.status(400).json(new ApiResponse(400, {}, "All values are empty, nothing to update."));
     }
     let newUser = {};
@@ -881,6 +881,34 @@ const updateUserDetails = async (req, res) => {
     return res.status(500).json(new ApiResponse(500, {}, "Something went wrong while updating user details."));
   }
 }
+
+const getAssessmentScoresForTraineeByBatch = async (req, res) => {
+  try {
+    let { batchId, employeeId } = req.params;
+    let query = {}
+    if (batchId) {
+      let batch = await prisma.batch.findUnique({ where: { id: BigInt(batchId) } });
+      if (!batch) {
+        return res.status(400).json(new ApiResponse(400, {}, "Batch id does not exist in system."));
+      }
+      query = { user: { batches: { every: { batchId: batch.id } } } };
+    }
+    let user = await prisma.user.findUnique({ where: { employeeId: String(employeeId) } });
+    query = { ...query, userId: user.id, }
+    let data = await prisma.userAssessment.findMany({
+      where: query,
+      include: { assessment: { include: { module: true } } }
+    });
+    if (data.length) {
+      data = data.map(value => { return { ...value.assessment, marksObtained: value.marksObtained } });
+    }
+    return res.status(200).json(new ApiResponse(200, data, "Assessment details fetched successfully."));
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json(new ApiResponse(500, {}, "Something went wrong while fetching."));
+  }
+}
+
 // const addLocation = async (req, res) => {
 //   let { location } = req.body;
 //   try {
@@ -917,6 +945,7 @@ export {
   addSingleAssessmentDetails,
   getAllBatchesIncludingInactive,
   getAssessmentsForSpecificBatch,
+  getAssessmentScoresForTraineeByBatch,
   getAssessmentsDetailsForSpecificBatch,
   getAllTraineesByLocationsAndNotInBatch,
 };

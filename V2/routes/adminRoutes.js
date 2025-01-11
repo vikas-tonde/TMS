@@ -1,6 +1,6 @@
 import express from "express";
 import { validateAddSingleAssessmentDetails, validateExistingUserInBatch, validateIncomingBulkTest, validateIncomingBulkUsers, validateUser } from "../../validations/AdminRouteValidations.js";
-import { addBatchForExistingUser, addBulkTestDataofUsers, addRemark, addSingleAssessmentDetails, addUser, allUsers, bulkUsersFromFile, deleteAssessment, deleteBatch, deleteUser, getAllBatches, getAllBatchesIncludingInactive, getAllModules, getAllRoles, getAllTrainees, getAllTraineesByLocationsAndNotInBatch, getAssessmentDetails, getAssessmentsDetailsForSpecificBatch, getAssessmentsForSpecificBatch, getBatch, getLocations, getTraineeDetails, getUserDetails, resetPassword, setBatchInactive, setUserInactive, updateUserDetails } from "../controllers/AdminController.js";
+import { addBatchForExistingUser, addBulkTestDataofUsers, addRemark, addSingleAssessmentDetails, addUser, allUsers, bulkUsersFromFile, deleteAssessment, deleteBatch, deleteUser, getAllBatches, getAllBatchesIncludingInactive, getAllModules, getAllRoles, getAllTrainees, getAllTraineesByLocationsAndNotInBatch, getAssessmentDetails, getAssessmentScoresForTraineeByBatch, getAssessmentsDetailsForSpecificBatch, getAssessmentsForSpecificBatch, getBatch, getLocations, getTraineeDetails, getUserDetails, resetPassword, setBatchInactive, setUserInactive, updateUserDetails } from "../controllers/AdminController.js";
 import { adminAuthMiddleware } from "../middlewares/adminAuthMiddleware.js";
 import { authMiddleware } from "../middlewares/authMiddleware.js";
 import { upload } from "../middlewares/multerMiddleware.js";
@@ -36,6 +36,11 @@ adminRouterV2.get("/assessments/:batchId/:assessmentType", getAssessmentsForSpec
 adminRouterV2.get("/assessments/:batchId", getAssessmentsDetailsForSpecificBatch);
 adminRouterV2.get("/users/trainees/:batchId/:location", getAllTraineesByLocationsAndNotInBatch);
 adminRouterV2.get("/locations", getLocations);
+
+/**
+ * APIs for graph
+ */
+adminRouterV2.get("/graph/:employeeId/:batchId?", getAssessmentScoresForTraineeByBatch);
 
 adminRouterV2.post('/bulk/users', upload.single('file'), validateIncomingBulkUsers, bulkUsersFromFile);
 adminRouterV2.post('/bulk/test', upload.single('file'), validateIncomingBulkTest, addBulkTestDataofUsers);
