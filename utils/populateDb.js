@@ -1,6 +1,7 @@
 import bcrypt from 'bcryptjs';
 import prisma from "../DB/db.config.js";
 import { Metadata } from "../models/metadata.js"
+import { ROLES } from './roles.js';
 
 
 export const populateDB = async () => {
@@ -17,8 +18,12 @@ export const populateDB = async () => {
 export const populatePostgre = async () => {
     let roles = await prisma.role.findMany({ select: { id: true } });
     if (!roles.length) {
+        let keys = Object.keys(ROLES);
+        let data = keys.map(key=>{
+            return{name: ROLES[key]}
+        });
         await prisma.role.createMany({
-            data: [{ name: "Admin" }, { name: "Trainee" }]
+            data: [...data]
         });
     }
     let locations = await prisma.location.findMany({ select: { id: true } });

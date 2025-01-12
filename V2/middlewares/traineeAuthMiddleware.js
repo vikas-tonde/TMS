@@ -1,9 +1,9 @@
 import { ApiResponse } from "../../utils/ApiResponse.js"
 import { ROLES } from "../../utils/roles.js";
 
-export const adminAuthMiddleware = async (req, res, next) => {
+export const traineeAuthMiddleware = async (req, res, next) => {
     try {
-        if (req.user?.role.name !== ROLES.ADMIN) {
+        if (req.user?.role.name !== ROLES.TRAINEE) {
             return res.status(401).json(new ApiResponse(401, {}, "Unauthorized request"));
         }
         next();
