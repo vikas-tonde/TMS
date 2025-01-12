@@ -5,6 +5,6 @@ import { authMiddleware } from "../middlewares/authMiddleware.js";
 
 const traineeRouterV2 = express.Router();
 traineeRouterV2.use(authMiddleware);
-traineeRouterV2.get("/exams", getExams);
+traineeRouterV2.get("/exams/:batchId?", getExams);
 
 export default traineeRouterV2;
