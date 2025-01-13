@@ -828,12 +828,12 @@ const resetPassword = async (req, res) => {
 const updateUserDetails = async (req, res) => {
   try {
     let { employeeId } = req.params;
-    let { firstName, lastName, isActive, location, role } = req.body;
+    let { firstName, lastName, isActive, location, role, email } = req.body;
     let user = await prisma.user.findUnique({
       where: { employeeId: String(employeeId) },
       include: { location: true, role: true }
     });
-    let areValuesFilled = (firstName || lastName || location || role || user.isActive == isActive);
+    let areValuesFilled = (firstName || lastName || location || role || email || user.isActive == isActive);
     if (!areValuesFilled) {
       return res.status(400).json(new ApiResponse(400, {}, "All values are empty, nothing to update."));
     }
@@ -862,6 +862,10 @@ const updateUserDetails = async (req, res) => {
 
     if (isActive != user.isActive) {
       newUser.isActive = isActive;
+    }
+
+    if (isActive != user.email) {
+      newUser.email = email;
     }
 
     if (Object.keys(newUser).length === 0) {
