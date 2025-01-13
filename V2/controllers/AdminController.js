@@ -73,7 +73,7 @@ const bulkUsersFromFile = async (req, res, next) => {
 
         for (let user of users) {
           let userAlreadyPresnt = await tx.user.findFirst({
-            where: { email: user.email, employeeId: String(user.employeeId) }
+            where: { OR: [{ email: user.email }, { employeeId: String(user.employeeId) }] }
           });
           if (userAlreadyPresnt) {
             usersAlreadyPresent.push(userAlreadyPresnt);
@@ -914,10 +914,10 @@ const addLocation = async (req, res) => {
   try {
     if (location) {
       let locationRecord = await prisma.location.findUnique({ where: { name: location } });
-      if(locationRecord){
+      if (locationRecord) {
         return res.status(400).json(new ApiResponse(400, {}, "Location already exist in the system."));
       }
-      locationRecord = await prisma.location.create({ data:{ name: location } });
+      locationRecord = await prisma.location.create({ data: { name: location } });
       return res.status(200).json(new ApiResponse(200, locationRecord, "Location added successfully."));
     }
     return res.status(400).json(new ApiResponse(400, {}, "Location is not present."));
