@@ -905,19 +905,27 @@ const getAssessmentScoresForTraineeByBatch = async (req, res) => {
     return res.status(200).json(new ApiResponse(200, data, "Assessment details fetched successfully."));
   } catch (error) {
     console.log(error);
-    return res.status(500).json(new ApiResponse(500, {}, "Something went wrong while fetching."));
+    return res.status(500).json(new ApiResponse(500, {}, "Something went wrong while fetching assessments."));
   }
 }
 
-// const addLocation = async (req, res) => {
-//   let { location } = req.body;
-//   try {
-//     if (location) {
-//     }
-//   } catch (error) {
-
-//   }
-// }
+const addLocation = async (req, res) => {
+  let { location } = req.body;
+  try {
+    if (location) {
+      let locationRecord = await prisma.location.findUnique({ where: { name: location } });
+      if(locationRecord){
+        return res.status(400).json(new ApiResponse(400, {}, "Location already exist in the system."));
+      }
+      locationRecord = await prisma.location.create({ data:{ name: location } });
+      return res.status(200).json(new ApiResponse(200, locationRecord, "Location added successfully."));
+    }
+    return res.status(400).json(new ApiResponse(400, {}, "Location is not present."));
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json(new ApiResponse(500, {}, "Something went wrong while adding new location."));
+  }
+}
 
 export {
   addUser,
@@ -926,6 +934,7 @@ export {
   addRemark,
   deleteUser,
   deleteBatch,
+  addLocation,
   getAllRoles,
   getLocations,
   getAllModules,
