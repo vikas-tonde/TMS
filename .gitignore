@@ -1,7 +1,7 @@
 # Logs
 try.js
 */logs/*
-
+/uploads/*
 *.log
 npm-debug.log*
 yarn-debug.log*

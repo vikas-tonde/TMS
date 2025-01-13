@@ -75,7 +75,7 @@ const loginUser = async (req, res) => {
     path: "/",
     maxAge: process.env.COOKIE_EXPIRY
   }
-  user.id = user.id.toString();
+  delete user.password;
   return res
     .cookie("accessToken", accessToken, options)
     .status(200)
@@ -83,7 +83,7 @@ const loginUser = async (req, res) => {
       new ApiResponse(
         200,
         {
-          user, accessToken
+          user
         },
         "User logged In Successfully"
       )
