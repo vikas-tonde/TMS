@@ -784,6 +784,18 @@ const deleteBatch = async (req, res) => {
   }
 }
 
+const deleteLocation = async (req, res) => {
+  try {
+    let { locationId } = req.params;
+    await prisma.batch.delete({ where: { id: parseInt(locationId) } });
+    return res.status(200).json(new ApiResponse(200, {}, "Batch deleted successfully"));
+  }
+  catch (e) {
+    console.log(e);
+    return res.status(500).json(new ApiResponse(500, {}, "Something went wrong while deleting batch."));
+  }
+}
+
 const addBatchForExistingUser = async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -944,6 +956,7 @@ export {
   getAllModules,
   resetPassword,
   getAllBatches,
+  deleteLocation,
   getAllTrainees,
   getUserDetails,
   setUserInactive,
