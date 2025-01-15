@@ -50,8 +50,19 @@ const getRemarks = async (req, res) => {
   }
 }
 
+const getBatches = async (req, res) => {
+  try {
+    let batches = await prisma.batch.findMany({ where: { users: { every: { userId: req.user.id } } } });
+    return res.status(200).json(new ApiResponse(200, batches, "Batches fetched successfully."));
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json(new ApiResponse(500, {}, "Something went wrong fetching batches."));
+  }
+}
+
 export {
   getExams,
-  getRemarks
+  getRemarks,
+  getBatches
 };
 

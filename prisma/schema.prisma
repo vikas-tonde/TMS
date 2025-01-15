@@ -54,15 +54,16 @@ model Location {
 }
 
 model Batch {
-  id          BigInt       @id @default(autoincrement())
+  id          BigInt          @id @default(autoincrement())
   batchName   String
-  isLatest    Boolean      @default(true)
-  isActive    Boolean      @default(true)
-  created_at  DateTime     @default(now())
+  isLatest    Boolean         @default(true)
+  isActive    Boolean         @default(true)
+  created_at  DateTime        @default(now())
   locationId  Int
-  location    Location     @relation(fields: [locationId], references: [id], onDelete: Cascade)
+  location    Location        @relation(fields: [locationId], references: [id], onDelete: Cascade)
   users       UserBatch[]
-  assessments Assessment[] @relation(name: "assessmentToBatch")
+  assessments Assessment[]    @relation(name: "assessmentToBatch")
+  trainings   BatchTraining[]
 }
 
 model UserBatch {
@@ -75,21 +76,24 @@ model UserBatch {
 }
 
 model Module {
-  id          Int          @id @default(autoincrement())
-  moduleName  String       @unique
+  id          Int               @id @default(autoincrement())
+  moduleName  String            @unique
   assessments Assessment[]
+  trainings   TrainingModules[]
 }
 
 model Assessment {
-  id             BigInt           @id @default(autoincrement())
-  moduleId       Int
-  date           DateTime         @default(now())
-  assessmentName String
-  totalMarks     Int
-  assessmentType String
-  module         Module           @relation(fields: [moduleId], references: [id], onDelete: Cascade)
-  users          UserAssessment[]
-  batches        Batch[]          @relation(name: "assessmentToBatch")
+  id              BigInt           @id @default(autoincrement())
+  moduleId        Int
+  date            DateTime         @default(now())
+  assessmentName  String
+  totalMarks      Int
+  assessmentType  String
+  batchTrainingId BigInt
+  module          Module           @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  users           UserAssessment[]
+  training        BatchTraining    @relation(fields: [batchTrainingId], references: [id], onDelete: Cascade)
+  batches         Batch[]          @relation(name: "assessmentToBatch")
 }
 
 model UserAssessment {
@@ -100,4 +104,33 @@ model UserAssessment {
   assessment    Assessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
 
   @@id([userId, assessmentId])
+}
+
+model Training {
+  id           BigInt            @id @default(autoincrement())
+  trainingName String
+  duration     Int
+  modules      TrainingModules[]
+  batches      BatchTraining[]
+}
+
+model TrainingModules {
+  trainingId BigInt
+  moduleId   Int
+  modules    Module   @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  trainings  Training @relation(fields: [trainingId], references: [id], onDelete: Cascade)
+
+  @@id([trainingId, moduleId])
+}
+
+model BatchTraining {
+  id             BigInt       @id @default(autoincrement())
+  trainingId     BigInt
+  batchId        BigInt
+  status         Boolean
+  assignedDate   DateTime     @default(now())
+  completionDate DateTime?
+  batch          Batch        @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  training       Training     @relation(fields: [trainingId], references: [id], onDelete: Cascade)
+  assessments    Assessment[]
 }
