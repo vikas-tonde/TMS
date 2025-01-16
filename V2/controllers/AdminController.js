@@ -943,11 +943,31 @@ const addLocation = async (req, res) => {
   }
 }
 
+const addModules = async (req, res) => {
+  try {
+    let { modules } = req.body;
+    let result = await prisma.module.findMany({ where: { moduleName: { in: modules } } });
+    if (result.length == modules.length) {
+      return res.status(400).json(new ApiResponse(400, {}, "All modules are already present in system."));
+    }
+    if (result.length) {
+      modules = modules.filter(module => !result.includes(module));
+    }
+    modules = modules.map(module => { return { moduleName: module } });
+    let savedModules = await prisma.module.createMany({ data: modules });
+    return res.status(200).json(new ApiResponse(200, savedModules, "Module(s) saved successfully."));
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json(new ApiResponse(500, {}, "Something went wrong while adding new module(s)."));
+  }
+}
+
 export {
   addUser,
   getBatch,
   allUsers,
   addRemark,
+  addModules,
   deleteUser,
   deleteBatch,
   addLocation,
