@@ -58,5 +58,5 @@ adminRouterV2.put("/user/:employeeId", updateUserDetails);
 adminRouterV2.delete("/assessment/:assessmentId", deleteAssessment);
 adminRouterV2.delete("/user/delete/:userId", deleteUser);
 adminRouterV2.delete("/batch/:batchId", deleteBatch);
-adminRouterV2.delete("/location/:locationId", deleteLocation);
+adminRouterV2.delete("/location/:locationName", deleteLocation);
 export default adminRouterV2;

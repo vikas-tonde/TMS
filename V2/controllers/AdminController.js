@@ -786,13 +786,17 @@ const deleteBatch = async (req, res) => {
 
 const deleteLocation = async (req, res) => {
   try {
-    let { locationId } = req.params;
-    await prisma.batch.delete({ where: { id: parseInt(locationId) } });
-    return res.status(200).json(new ApiResponse(200, {}, "Batch deleted successfully"));
+    let { locationName } = req.params;
+    let location = await prisma.location.findFirst({ where: { name: locationName } });
+    if(!location){
+      return res.status(400).json(new ApiResponse(400, {}, `Location not found: Invalid location id.`));
+    }
+    await prisma.location.delete({ where: { id: (location.id) } });
+    return res.status(200).json(new ApiResponse(200, {}, `Location: ${locationName} deleted successfully`));
   }
   catch (e) {
     console.log(e);
-    return res.status(500).json(new ApiResponse(500, {}, "Something went wrong while deleting batch."));
+    return res.status(500).json(new ApiResponse(500, {}, `Something went wrong while deleting Location: ${locationName}.`));
   }
 }
 
@@ -934,7 +938,7 @@ const addLocation = async (req, res) => {
         return res.status(400).json(new ApiResponse(400, {}, "Location already exist in the system."));
       }
       locationRecord = await prisma.location.create({ data: { name: location } });
-      return res.status(200).json(new ApiResponse(200, locationRecord, "Location added successfully."));
+      return res.status(200).json(new ApiResponse(200, locationRecord, `Location: ${location} added successfully.`));
     }
     return res.status(400).json(new ApiResponse(400, {}, "Location is not present."));
   } catch (error) {
