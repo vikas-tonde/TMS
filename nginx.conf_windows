@@ -1,0 +1,43 @@
+worker_processes  1;
+
+events {
+    worker_connections  1024;
+}
+
+http {
+    include       mime.types;
+    default_type  application/octet-stream;
+
+    # Server block to handle frontend and backend
+    server {
+        listen 80;
+        server_name localhost;  # Use your domain or IP if needed
+
+        # Path to your Vite project build folder
+        root "D:/Training Application/TMS_Frontend/TMS_Frontend/dist"; 
+        index index.html;
+
+        # Serve static files for the frontend
+        location / {
+            try_files $uri $uri/ /index.html;
+        }
+
+        # Proxy API requests to the backend server (localhost:5000)
+        location /api/ {
+			
+			rewrite ^/api(/.*)$ /v2/api$1 break;
+			
+            proxy_pass http://localhost:5000/v2/;  # Backend API URL
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+
+            # Optionally add headers for WebSocket support if needed
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection 'upgrade';
+        }
+
+        # Optionally handle additional configurations for logging, security, etc.
+    }
+}
