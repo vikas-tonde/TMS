@@ -10,12 +10,12 @@ const getExams = async (req, res) => {
       if (!batch) {
         return res.status(400).json(new ApiResponse(400, {}, "Batch id does not exist in system."));
       }
-      query = { batches: { every: { id: batchId } } };
+      query = { batches: { some: { id: batchId } } };
     }
-    query = { ...query, users: { every: { userId: req.user.id } } };
+    query = { ...query, users: { some: { userId: req.user.id } } };
     let examDetails = await prisma.assessment.findMany({
       where: { ...query },
-      include: { users: { select: { marksObtained: true } }, module: true }
+      include: { users: { where: { userId: req.user.id }, select: { marksObtained: true } }, module: true }
     });
     if (examDetails.length) {
       examDetails = examDetails.map(details => {
@@ -52,7 +52,7 @@ const getRemarks = async (req, res) => {
 
 const getBatches = async (req, res) => {
   try {
-    let batches = await prisma.batch.findMany({ where: { users: { every: { userId: req.user.id } } } });
+    let batches = await prisma.batch.findMany({ where: { users: { some: { userId: req.user.id } } } });
     return res.status(200).json(new ApiResponse(200, batches, "Batches fetched successfully."));
   } catch (error) {
     console.log(error);
@@ -60,9 +60,37 @@ const getBatches = async (req, res) => {
   }
 }
 
+const getQuizCount = async (req, res) => {
+  try {
+    let count = await prisma.userAssessment.count({ where: { userId: req.user.id, assessment: { assessmentType: "Quiz" } } });
+    return res.status(200).json(new ApiResponse(200, { count }, "Couts of quizes fetched."));
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json(new ApiResponse(500, {}, "Something went wrong fetching quiz count."));
+  }
+}
+
+const getQuizPercentage = async (req, res) => {
+  try {
+    let result = await prisma.$queryRaw`
+    select ((sum(ua."marksObtained")::float / sum(a."totalMarks")::float) * 100) as percentage
+    from public."UserAssessment" ua
+    JOIN public."Assessment" a ON a.id = ua."assessmentId"
+    where ua."userId"=${req.user.id}
+    `;
+    console.log(result);
+    return res.status(200).json(new ApiResponse(200, result[0], "percentage of quizes fetched."));
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json(new ApiResponse(500, {}, "Something went wrong fetching quiz count."));
+  }
+}
+
 export {
   getExams,
+  getBatches,
   getRemarks,
-  getBatches
+  getQuizCount,
+  getQuizPercentage
 };
 

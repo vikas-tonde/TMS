@@ -1,5 +1,5 @@
 import express from "express";
-import { getBatches, getExams, getRemarks } from "../controllers/TraineeController.js";
+import { getBatches, getExams, getQuizCount, getQuizPercentage, getRemarks } from "../controllers/TraineeController.js";
 import { authMiddleware } from "../middlewares/authMiddleware.js";
 import { traineeAuthMiddleware } from "../middlewares/traineeAuthMiddleware.js";
 
@@ -10,5 +10,7 @@ traineeRouterV2.use(traineeAuthMiddleware);
 traineeRouterV2.get("/exams/:batchId?", getExams);
 traineeRouterV2.get("/remarks", getRemarks);
 traineeRouterV2.get("/batches", getBatches);
+traineeRouterV2.get("/quiz/count", getQuizCount);
+traineeRouterV2.get("/quiz/percentage", getQuizPercentage);
 
 export default traineeRouterV2;
