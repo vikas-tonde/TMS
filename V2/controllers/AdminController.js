@@ -976,7 +976,7 @@ const addTraining = async (req, res) => {
     });
     const training = await prisma.training.create({
       data: {
-        trainingName, duration,
+        trainingName, duration: parseInt(duration),
         modules: { create: foundModules.map(module => ({ moduleId: module.id })) }
       }
     });
