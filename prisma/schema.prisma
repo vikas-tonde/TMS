@@ -63,7 +63,6 @@ model Batch {
   location    Location        @relation(fields: [locationId], references: [id], onDelete: Cascade)
   users       UserBatch[]
   assessments Assessment[]    @relation(name: "assessmentToBatch")
-  trainings   BatchTraining[]
 }
 
 model UserBatch {
@@ -89,10 +88,8 @@ model Assessment {
   assessmentName  String
   totalMarks      Int
   assessmentType  String
-  batchTrainingId BigInt
   module          Module           @relation(fields: [moduleId], references: [id], onDelete: Cascade)
   users           UserAssessment[]
-  training        BatchTraining    @relation(fields: [batchTrainingId], references: [id], onDelete: Cascade)
   batches         Batch[]          @relation(name: "assessmentToBatch")
 }
 
@@ -111,7 +108,6 @@ model Training {
   trainingName String
   duration     Int
   modules      TrainingModules[]
-  batches      BatchTraining[]
 }
 
 model TrainingModules {
@@ -123,14 +119,13 @@ model TrainingModules {
   @@id([trainingId, moduleId])
 }
 
-model BatchTraining {
-  id             BigInt       @id @default(autoincrement())
-  trainingId     BigInt
-  batchId        BigInt
-  status         Boolean
-  assignedDate   DateTime     @default(now())
+model UserTraining {
+  id BigInt @id @default(autoincrement())
+  trainingId BigInt
+  userId BigInt
+  assignedDate DateTime @default(now())
   completionDate DateTime?
-  batch          Batch        @relation(fields: [batchId], references: [id], onDelete: Cascade)
-  training       Training     @relation(fields: [trainingId], references: [id], onDelete: Cascade)
-  assessments    Assessment[]
+  isCompleted Boolean @default(false)
+  
+  @@unique([trainingId, userId])
 }

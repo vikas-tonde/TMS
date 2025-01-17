@@ -788,7 +788,7 @@ const deleteLocation = async (req, res) => {
   try {
     let { locationName } = req.params;
     let location = await prisma.location.findFirst({ where: { name: locationName } });
-    if(!location){
+    if (!location) {
       return res.status(400).json(new ApiResponse(400, {}, `Location not found: Invalid location id.`));
     }
     await prisma.location.delete({ where: { id: (location.id) } });
@@ -955,7 +955,8 @@ const addModules = async (req, res) => {
       return res.status(400).json(new ApiResponse(400, {}, "All modules are already present in system."));
     }
     if (result.length) {
-      modules = modules.filter(module => !result.includes(module));
+      let names = result.map(module => module.moduleName);
+      modules = modules.filter(module => !names.includes(module));
     }
     modules = modules.map(module => { return { moduleName: module } });
     let savedModules = await prisma.module.createMany({ data: modules });
@@ -963,6 +964,26 @@ const addModules = async (req, res) => {
   } catch (error) {
     console.log(error);
     return res.status(500).json(new ApiResponse(500, {}, "Something went wrong while adding new module(s)."));
+  }
+}
+
+const addTraining = async (req, res) => {
+  try {
+    let { trainingName, duration, modules } = req.body;
+    const foundModules = await prisma.module.findMany({
+      where: { moduleName: { in: modules, }, },
+      select: { id: true }
+    });
+    const training = await prisma.training.create({
+      data: {
+        trainingName, duration,
+        modules: { create: foundModules.map(module => ({ moduleId: module.id })) }
+      }
+    });
+    return res.status(200).json(new ApiResponse(200, training, "Training added successfully."));
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json(new ApiResponse(500, {}, "Something went wrong while adding new training."));
   }
 }
 
@@ -975,6 +996,7 @@ export {
   deleteUser,
   deleteBatch,
   addLocation,
+  addTraining,
   getAllRoles,
   getLocations,
   getAllModules,

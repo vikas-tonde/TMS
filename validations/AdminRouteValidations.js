@@ -57,7 +57,7 @@ const validateAddSingleAssessmentDetails = [
 ];
 
 const validateExistingUserInBatch = [
-    check('batchId', 'Enter the vallid batch Id.').isLength({ checkFalsy: true }).custom(async (value) => {
+    check('batchId', 'Enter the valid batch Id.').isLength({ checkFalsy: true }).custom(async (value) => {
         const batch = await prisma.batch.findUnique({ where: { id: BigInt(value) } });
         if (!batch) {
             throw new Error(`Batch with Id ${value} does not exit in system.`);
@@ -80,7 +80,27 @@ const validateExistingUserInBatch = [
     })
 ];
 
+const validateAddTraining = [
+    check('trainingName', 'Enter the training name.').isLength({ checkFalsy: true }),
+    check('duration', 'Enter the ').isInt({ gt: 0 }),
+    check('modules', 'Enter the modules.').isArray().isLength({ min: 1 }).custom(async values=>{
+        let result = await prisma.module.findMany({
+            where: { moduleName:{ in: values } }
+        });
+        if(!result){
+            throw new Error("Modules are not present in system.");
+        }
+        if(result.length!= values?.length){
+            let names = result.map(module=>module.moduleName);
+            let absentModules = values.filter(module=> !names.includes(module));
+            throw new Error(`Modules: ${absentModules.join(",")} are not present in system.`);
+        }
+        return true
+    })
+];
+
 export {
     validateAddSingleAssessmentDetails, validateIncomingBulkTest,
-    validateIncomingBulkUsers, validateUser, validateExistingUserInBatch
+    validateIncomingBulkUsers, validateUser, validateExistingUserInBatch,
+    validateAddTraining
 };
