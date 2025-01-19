@@ -35,6 +35,7 @@ model User {
   batches      UserBatch[]
   assessments  UserAssessment[]
   remarks      Remark[]
+  trainings UserTraining[]
 }
 
 model Remark {
@@ -108,13 +109,14 @@ model Training {
   trainingName String
   duration     Int
   modules      TrainingModules[]
+  users UserTraining[]
 }
 
 model TrainingModules {
   trainingId BigInt
   moduleId   Int
-  modules    Module   @relation(fields: [moduleId], references: [id], onDelete: Cascade)
-  trainings  Training @relation(fields: [trainingId], references: [id], onDelete: Cascade)
+  module    Module   @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  training  Training @relation(fields: [trainingId], references: [id], onDelete: Cascade)
 
   @@id([trainingId, moduleId])
 }
@@ -126,6 +128,8 @@ model UserTraining {
   assignedDate DateTime @default(now())
   completionDate DateTime?
   isCompleted Boolean @default(false)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  training Training @relation(fields: [trainingId], references: [id], onDelete:Cascade )
   
   @@unique([trainingId, userId])
 }

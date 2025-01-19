@@ -968,6 +968,10 @@ const addModules = async (req, res) => {
 }
 
 const addTraining = async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
   try {
     let { trainingName, duration, modules } = req.body;
     const foundModules = await prisma.module.findMany({
@@ -987,6 +991,42 @@ const addTraining = async (req, res) => {
   }
 }
 
+const assignTraining = async (req, res) => {
+  try {
+    let { trainingId, userIds } = req.body;
+    if (!trainingId) {
+      return res.status(400).json(new ApiResponse(400, {}, "TrainingId is empty."));
+    }
+    let training = await prisma.training.findUnique({
+      where: { id: BigInt(trainingId) },
+      select: { id: true }
+    });
+    if (!userIds?.length) {
+      return res.status(400).json(new ApiResponse(400, {}, "UserIds are empty."));
+    }
+    let presentInDb = await prisma.user.findMany({
+      where: { id: { in: userIds } },
+      select: { id: true }
+    });
+    if (presentInDb.length !== userIds?.length) {
+      let ids = presentInDb.map(user => user.id);
+      let absentIds = userIds.filter(id => ids.includes(BigInt(id)));
+      return res.status(400).json(new ApiResponse(400, {}, `${absentIds.join(",")} are not present in system`));
+    }
+    let dataToInsert = userIds.map(id => {
+      return {
+        userId: BigInt(id),
+        trainingId: BigInt(trainingId),
+        assignedDate : new Date(),
+      }
+    });
+    let result = await prisma.userTraining.createMany( {data:dataToInsert});
+    return res.status(200).json(new ApiResponse(200, result, "Training assigned successfully."));
+  } catch (error) {
+
+  }
+}
+
 export {
   addUser,
   getBatch,
@@ -1003,6 +1043,7 @@ export {
   resetPassword,
   getAllBatches,
   deleteLocation,
+  assignTraining,
   getAllTrainees,
   getUserDetails,
   setUserInactive,
