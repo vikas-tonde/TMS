@@ -64,12 +64,4 @@ app.use(rootRouterV2);
 
 await populatePostgre();
 app.listen(port, "0.0.0.0", () => console.log(`Server is runnning on port : http://localhost:${port}`));
-// mongoose.connect(process.env.MONGO_URL).then((con) => {
-//     console.log(`Database connected on Host: ${con.connection.host}`);
-//     populateDB();
-// })
-//     .catch((err) => {
-//         console.log("MONGO db connection failed !!! ", err);
-//         throw err;
-//     });
 

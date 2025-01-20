@@ -35,7 +35,7 @@ model User {
   batches      UserBatch[]
   assessments  UserAssessment[]
   remarks      Remark[]
-  trainings UserTraining[]
+  trainings    UserTraining[]
 }
 
 model Remark {
@@ -55,15 +55,15 @@ model Location {
 }
 
 model Batch {
-  id          BigInt          @id @default(autoincrement())
+  id          BigInt       @id @default(autoincrement())
   batchName   String
-  isLatest    Boolean         @default(true)
-  isActive    Boolean         @default(true)
-  created_at  DateTime        @default(now())
+  isLatest    Boolean      @default(true)
+  isActive    Boolean      @default(true)
+  created_at  DateTime     @default(now())
   locationId  Int
-  location    Location        @relation(fields: [locationId], references: [id], onDelete: Cascade)
+  location    Location     @relation(fields: [locationId], references: [id], onDelete: Cascade)
   users       UserBatch[]
-  assessments Assessment[]    @relation(name: "assessmentToBatch")
+  assessments Assessment[] @relation(name: "assessmentToBatch")
 }
 
 model UserBatch {
@@ -83,15 +83,15 @@ model Module {
 }
 
 model Assessment {
-  id              BigInt           @id @default(autoincrement())
-  moduleId        Int
-  date            DateTime         @default(now())
-  assessmentName  String
-  totalMarks      Int
-  assessmentType  String
-  module          Module           @relation(fields: [moduleId], references: [id], onDelete: Cascade)
-  users           UserAssessment[]
-  batches         Batch[]          @relation(name: "assessmentToBatch")
+  id             BigInt           @id @default(autoincrement())
+  moduleId       Int
+  date           DateTime         @default(now())
+  assessmentName String
+  totalMarks     Int
+  assessmentType String
+  module         Module           @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  users          UserAssessment[]
+  batches        Batch[]          @relation(name: "assessmentToBatch")
 }
 
 model UserAssessment {
@@ -109,27 +109,27 @@ model Training {
   trainingName String
   duration     Int
   modules      TrainingModules[]
-  users UserTraining[]
+  users        UserTraining[]
 }
 
 model TrainingModules {
   trainingId BigInt
   moduleId   Int
-  module    Module   @relation(fields: [moduleId], references: [id], onDelete: Cascade)
-  training  Training @relation(fields: [trainingId], references: [id], onDelete: Cascade)
+  module     Module   @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  training   Training @relation(fields: [trainingId], references: [id], onDelete: Cascade)
 
   @@id([trainingId, moduleId])
 }
 
 model UserTraining {
-  id BigInt @id @default(autoincrement())
-  trainingId BigInt
-  userId BigInt
-  assignedDate DateTime @default(now())
+  id             BigInt    @id @default(autoincrement())
+  trainingId     BigInt
+  userId         BigInt
+  assignedDate   DateTime  @default(now())
   completionDate DateTime?
-  isCompleted Boolean @default(false)
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  training Training @relation(fields: [trainingId], references: [id], onDelete:Cascade )
-  
+  isCompleted    Boolean   @default(false)
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  training       Training  @relation(fields: [trainingId], references: [id], onDelete: Cascade)
+
   @@unique([trainingId, userId])
 }
