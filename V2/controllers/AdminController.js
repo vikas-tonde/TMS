@@ -402,6 +402,19 @@ const getAllBatchesIncludingInactive = async (req, res) => {
   }
 }
 
+const getAllTrainings = async (req, res) => {
+  try {
+    let trainings = await prisma.training.findMany({});
+    if (trainings?.length) {
+      return res.status(200).json(new ApiResponse(200, trainings));
+    }
+    return res.status(404).json(new ApiResponse(404, {}, `No trainings found for location ${location}`));
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json(new ApiResponse(500, {}, "Something went wrong"));
+  }
+}
+
 const getBatch = async (req, res) => {
   let { batchId } = req.params;
   try {
@@ -784,6 +797,18 @@ const deleteBatch = async (req, res) => {
   }
 }
 
+const deleteTraining = async (req, res) => {
+  try {
+    let { trainingId } = req.params;
+    await prisma.training.delete({ where: { id: BigInt(trainingId) } });
+    return res.status(200).json(new ApiResponse(200, {}, "Training deleted successfully"));
+  }
+  catch (e) {
+    console.log(e);
+    return res.status(500).json(new ApiResponse(500, {}, "Something went wrong while deleting training."));
+  }
+}
+
 const deleteLocation = async (req, res) => {
   try {
     let { locationName } = req.params;
@@ -1042,11 +1067,13 @@ export {
   getAllModules,
   resetPassword,
   getAllBatches,
+  deleteTraining,
   deleteLocation,
   assignTraining,
   getAllTrainees,
   getUserDetails,
   setUserInactive,
+  getAllTrainings,
   setBatchInactive,
   deleteAssessment,
   getTraineeDetails,

@@ -1,6 +1,6 @@
 import express from "express";
 import { validateAddSingleAssessmentDetails, validateAddTraining, validateExistingUserInBatch, validateIncomingBulkTest, validateIncomingBulkUsers, validateUser } from "../../validations/AdminRouteValidations.js";
-import { addBatchForExistingUser, addBulkTestDataofUsers, addLocation, addModules, addRemark, addSingleAssessmentDetails, addTraining, addUser, allUsers, assignTraining, bulkUsersFromFile, deleteAssessment, deleteBatch, deleteLocation, deleteUser, getAllBatches, getAllBatchesIncludingInactive, getAllModules, getAllRoles, getAllTrainees, getAllTraineesByLocationsAndNotInBatch, getAssessmentDetails, getAssessmentScoresForTraineeByBatch, getAssessmentsDetailsForSpecificBatch, getAssessmentsForSpecificBatch, getBatch, getLocations, getTraineeDetails, getUserDetails, resetPassword, setBatchInactive, setUserInactive, updateUserDetails } from "../controllers/AdminController.js";
+import { addBatchForExistingUser, addBulkTestDataofUsers, addLocation, addModules, addRemark, addSingleAssessmentDetails, addTraining, addUser, allUsers, assignTraining, bulkUsersFromFile, deleteAssessment, deleteBatch, deleteLocation, deleteTraining, deleteUser, getAllBatches, getAllBatchesIncludingInactive, getAllModules, getAllRoles, getAllTrainees, getAllTraineesByLocationsAndNotInBatch, getAllTrainings, getAssessmentDetails, getAssessmentScoresForTraineeByBatch, getAssessmentsDetailsForSpecificBatch, getAssessmentsForSpecificBatch, getBatch, getLocations, getTraineeDetails, getUserDetails, resetPassword, setBatchInactive, setUserInactive, updateUserDetails } from "../controllers/AdminController.js";
 import { adminAuthMiddleware } from "../middlewares/adminAuthMiddleware.js";
 import { authMiddleware } from "../middlewares/authMiddleware.js";
 import { upload } from "../middlewares/multerMiddleware.js";
@@ -36,6 +36,7 @@ adminRouterV2.get("/assessments/:batchId/:assessmentType", getAssessmentsForSpec
 adminRouterV2.get("/assessments/:batchId", getAssessmentsDetailsForSpecificBatch);
 adminRouterV2.get("/users/trainees/:batchId/:location", getAllTraineesByLocationsAndNotInBatch);
 adminRouterV2.get("/locations", getLocations);
+adminRouterV2.get("/trainings/all", getAllTrainings);
 
 /**
  * APIs for graph
@@ -62,4 +63,5 @@ adminRouterV2.delete("/assessment/:assessmentId", deleteAssessment);
 adminRouterV2.delete("/user/delete/:userId", deleteUser);
 adminRouterV2.delete("/batch/:batchId", deleteBatch);
 adminRouterV2.delete("/location/:locationName", deleteLocation);
+adminRouterV2.delete("/training/:trainingId", deleteTraining);
 export default adminRouterV2;
