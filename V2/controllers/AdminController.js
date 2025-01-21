@@ -541,8 +541,6 @@ const addUser = async (req, res) => {
 }
 
 const setUserInactive = async (req, res) => {
-  console.log();
-
   let { userIds, isActive } = req.body;
   if (userIds?.length > 0) {
     try {
@@ -869,13 +867,12 @@ const addBatchForExistingUser = async (req, res) => {
     let result = await prisma.$transaction(async (tx) => {
       return await tx.userBatch.create({ data: { userId: user.id, batchId: batch.id } });
     });
-    logger.debug(`User ${user.employeeId} added into batch ${batch.batchName} successfully.`)
+    logger.audit(`User ${user.employeeId} added into batch ${batch.batchName} successfully.`)
     return res.status(200).json(new ApiResponse(200, {}, `User ${user.employeeId} added into batch ${batch.batchName} successfully.`));
   } catch (error) {
-    console.log(error);
+    logger.error(error);
     return res.status(500).json(new ApiResponse(500, {}, "Something went wrong while adding user in batch."));
   }
-
 }
 
 const resetPassword = async (req, res) => {
