@@ -541,8 +541,6 @@ const addUser = async (req, res) => {
 }
 
 const setUserInactive = async (req, res) => {
-  console.log();
-
   let { userIds, isActive } = req.body;
   if (userIds?.length > 0) {
     try {
@@ -557,15 +555,15 @@ const setUserInactive = async (req, res) => {
         });
         return count;
       });
-      return res.status(200).json(new ApiResponse(200, {}, `user have been set to ${isActive ? "Active" : "Inactive"}.`));
+      logger.audit(`${userIds.join(",")} user(s) have been set to ${isActive ? "Active" : "Inactive"}.`);
+      return res.status(200).json(new ApiResponse(200, {}, `${userIds.join(",")} user(s) have been set to ${isActive ? "Active" : "Inactive"}.`));
     } catch (error) {
-      session.abortTransaction();
-      console.log(error);
+      logger.error(error);
       return res.status(500).json(new ApiResponse(500, {}, "Something went wrong while setting user inactive."));
     }
   }
   else {
-    return res.status(400).json(new ApiResponse(400, {}, "User Id is not provided."));
+    return res.status(400).json(new ApiResponse(400, {}, "User Ids is not provided."));
   }
 }
 
@@ -581,9 +579,10 @@ const setBatchInactive = async (req, res) => {
           data: { isActive: isActive || false }
         });
       });
-      return res.status(200).json(new ApiResponse(200, {}, `Batch have been set to ${isActive ? "Active" : "Inactive"}.`));
+      logger.audit(`Batch: ${batch.batchName} have been set to ${isActive ? "Active" : "Inactive"} by user ${req.user.firstName} ${req.user.lastName} (${req.user.employeeId}).`);
+      return res.status(200).json(new ApiResponse(200, {}, `Batch: ${batch.batchName} have been set to ${isActive ? "Active" : "Inactive"}.`));
     } catch (error) {
-      console.log(error);
+      logger.error(error);
       return res.status(500).json(new ApiResponse(500, {}, "Something went wrong while setting batch inactive."));
     }
   }
@@ -781,11 +780,16 @@ const getAllRoles = async (req, res) => {
 const deleteAssessment = async (req, res) => {
   try {
     let { assessmentId } = req.params;
+    let assessment = await prisma.assessment.findUnique({ where: { id: BigInt(assessmentId) } });
+    if (!assessment) {
+      return res.status(400).json(new ApiResponse(400, {}, "Assessment does not exist in system."));
+    }
     await prisma.assessment.delete({ where: { id: BigInt(assessmentId) } });
-    return res.status(200).json(new ApiResponse(200, {}, "Assessment deleted successfully"));
+    logger.audit(`Assessment ${assessment.assessmentName} is deleted by ${req.user.firstName} ${req.user.lastName} (${req.user.employeeId})`);
+    return res.status(200).json(new ApiResponse(200, {}, `Assessment ${assessment.assessmentName} deleted successfully`));
   }
   catch (e) {
-    console.log(e);
+    logger.error(e);
     return res.status(500).json(new ApiResponse(500, {}, "Something went wrong while deleting assessment."));
   }
 }
@@ -793,11 +797,16 @@ const deleteAssessment = async (req, res) => {
 const deleteUser = async (req, res) => {
   try {
     let { userId } = req.params;
+    let user = await prisma.user.findUnique({ where: { id: BigInt(userId) } });
+    if (!user) {
+      return res.status(400).json(new ApiResponse(400, {}, "User does not exist in system."));
+    }
     await prisma.user.delete({ where: { id: BigInt(userId) } });
-    return res.status(200).json(new ApiResponse(200, {}, "User deleted successfully"));
+    logger.audit(`User ${user.employeeId} is deleted by ${req.user.firstName} ${req.user.lastName} (${req.user.employeeId})`);
+    return res.status(200).json(new ApiResponse(200, {}, `User ${user.employeeId} deleted successfully`));
   }
   catch (e) {
-    console.log(e);
+    logger.error(e);
     return res.status(500).json(new ApiResponse(500, {}, "Something went wrong while deleting user."));
   }
 }
@@ -805,11 +814,16 @@ const deleteUser = async (req, res) => {
 const deleteBatch = async (req, res) => {
   try {
     let { batchId } = req.params;
+    let batch = await prisma.batch.findUnique({ where: { id: BigInt(batchId) } });
+    if (!batch) {
+      return res.status(400).json(new ApiResponse(400, {}, "Batch does not exist in system."));
+    }
     await prisma.batch.delete({ where: { id: BigInt(batchId) } });
-    return res.status(200).json(new ApiResponse(200, {}, "Batch deleted successfully"));
+    logger.audit(`Batch ${batch.batchName} is deleted by ${req.user.firstName} ${req.user.lastName} (${req.user.employeeId}).`);
+    return res.status(200).json(new ApiResponse(200, {}, `Batch ${batch.batchName} is deleted successfully`));
   }
   catch (e) {
-    console.log(e);
+    logger.error(e);
     return res.status(500).json(new ApiResponse(500, {}, "Something went wrong while deleting batch."));
   }
 }
@@ -876,11 +890,12 @@ const addBatchForExistingUser = async (req, res) => {
     let result = await prisma.$transaction(async (tx) => {
       return await tx.userBatch.create({ data: { userId: user.id, batchId: batch.id } });
     });
-    return res.status(200).json(new ApiResponse(200, {}, "User added into batch successfully"));
+    logger.audit(`User ${user.employeeId} added into batch ${batch.batchName} successfully.`)
+    return res.status(200).json(new ApiResponse(200, {}, `User ${user.employeeId} added into batch ${batch.batchName} successfully.`));
   } catch (error) {
+    logger.error(error);
     return res.status(500).json(new ApiResponse(500, {}, "Something went wrong while adding user in batch."));
   }
-
 }
 
 const resetPassword = async (req, res) => {
@@ -897,7 +912,7 @@ const resetPassword = async (req, res) => {
     let salt = await bcrypt.genSalt(10);
     password = await bcrypt.hash(password, salt);
     user = await prisma.user.update({ where: { id: user.id }, data: { password: password } });
-    return res.status(200).json(new ApiResponse(200, {}, `Password is set with ${user.firstName}@123.`));
+    return res.status(200).json(new ApiResponse(200, {}, `Password of user ${user.employeeId} is set with ${user.firstName}@123.`));
   } catch (error) {
     console.log(error);
     return res.status(500).json(new ApiResponse(500, {}, "Something went wrong while resetting password."));
@@ -957,10 +972,11 @@ const updateUserDetails = async (req, res) => {
       });
     });
     if (savedUser) {
-      return res.status(200).json(new ApiResponse(200, savedUser, "User details updated successfully."));
+      logger.info(`User details of ${savedUser.employeeId} updated successfully.`);
+      return res.status(200).json(new ApiResponse(200, savedUser, `User details of ${savedUser.employeeId} updated successfully.`));
     }
   } catch (error) {
-    console.log(error);
+    logger.error(error);
     return res.status(500).json(new ApiResponse(500, {}, "Something went wrong while updating user details."));
   }
 }
@@ -998,14 +1014,16 @@ const addLocation = async (req, res) => {
     if (location) {
       let locationRecord = await prisma.location.findUnique({ where: { name: location } });
       if (locationRecord) {
-        return res.status(400).json(new ApiResponse(400, {}, "Location already exist in the system."));
+        logger.warn(`Location ${location} is already present in the system.`);
+        return res.status(400).json(new ApiResponse(400, {}, `Location ${location} is already present in the system.`));
       }
       locationRecord = await prisma.location.create({ data: { name: location } });
+      logger.warn(`Location: ${location} added successfully.`);
       return res.status(200).json(new ApiResponse(200, locationRecord, `Location: ${location} added successfully.`));
     }
     return res.status(400).json(new ApiResponse(400, {}, "Location is not present."));
   } catch (error) {
-    console.log(error);
+    logger.error(error);
     return res.status(500).json(new ApiResponse(500, {}, "Something went wrong while adding new location."));
   }
 }
@@ -1023,9 +1041,10 @@ const addModules = async (req, res) => {
     }
     modules = modules.map(module => { return { moduleName: module } });
     let savedModules = await prisma.module.createMany({ data: modules });
-    return res.status(200).json(new ApiResponse(200, savedModules, "Module(s) saved successfully."));
+    logger.info(`${modules.join(",")} Module(s) saved successfully.`);
+    return res.status(200).json(new ApiResponse(200, savedModules, `${modules.join(",")} Module(s) saved successfully.`));
   } catch (error) {
-    console.log(error);
+    logger.error(error);
     return res.status(500).json(new ApiResponse(500, {}, "Something went wrong while adding new module(s)."));
   }
 }
@@ -1047,9 +1066,10 @@ const addTraining = async (req, res) => {
         modules: { create: foundModules.map(module => ({ moduleId: module.id })) }
       }
     });
-    return res.status(200).json(new ApiResponse(200, training, "Training added successfully."));
+    logger.info(`Training ${training.trainingName} added by ${req.user.firstName} ${req.user.lastName} (${req.user.employeeId}).`);
+    return res.status(200).json(new ApiResponse(200, training, `Training ${training.trainingName} added successfully.`));
   } catch (error) {
-    console.log(error);
+    logger.error(error);
     return res.status(500).json(new ApiResponse(500, {}, "Something went wrong while adding new training."));
   }
 }
@@ -1058,13 +1078,15 @@ const assignTraining = async (req, res) => {
   try {
     let { trainingId, userIds } = req.body;
     if (!trainingId) {
+      logger.warn("TrainingId is empty.");
       return res.status(400).json(new ApiResponse(400, {}, "TrainingId is empty."));
     }
     let training = await prisma.training.findUnique({
       where: { id: BigInt(trainingId) },
-      select: { id: true }
+      select: { id: true, trainingName: true }
     });
     if (!userIds?.length) {
+      logger.warn("UserIds is empty.");
       return res.status(400).json(new ApiResponse(400, {}, "UserIds are empty."));
     }
     let presentInDb = await prisma.user.findMany({
@@ -1074,19 +1096,22 @@ const assignTraining = async (req, res) => {
     if (presentInDb.length !== userIds?.length) {
       let ids = presentInDb.map(user => user.id);
       let absentIds = userIds.filter(id => ids.includes(BigInt(id)));
+      logger.warn(`${absentIds.join(",")} are not present in system`);
       return res.status(400).json(new ApiResponse(400, {}, `${absentIds.join(",")} are not present in system`));
     }
     let dataToInsert = userIds.map(id => {
       return {
         userId: BigInt(id),
         trainingId: BigInt(trainingId),
-        assignedDate : new Date(),
+        assignedDate: new Date(),
       }
     });
-    let result = await prisma.userTraining.createMany( {data:dataToInsert});
+    let result = await prisma.userTraining.createMany({ data: dataToInsert });
+    logger.audit(`${userIds.join(",")} are assigned with training ${training.trainingName} by ${req.user.firstName} ${req.user.lastName} (${req.user.employeeId})`);
     return res.status(200).json(new ApiResponse(200, result, "Training assigned successfully."));
   } catch (error) {
-
+    logger.error(error);
+    return res.status(500).json(new ApiResponse(500, {}, "Something went wrong while assigning training."));
   }
 }
 
