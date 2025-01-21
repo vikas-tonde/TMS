@@ -6,6 +6,7 @@ import prisma from '../../DB/db.config.js';
 import { ApiResponse } from "../../utils/ApiResponse.js";
 import { Prisma } from '@prisma/client';
 import logger from '../../utils/logger.js';
+import { ROLES } from '../../utils/roles.js';
 
 const readExcelFile = async (filePath, sheetName) => {
   return excelToJson({
@@ -73,7 +74,7 @@ const bulkUsersFromFile = async (req, res, next) => {
         log.audit(`Batch ${newBatch.batchName} is created by user ${req.user.firstName} ${req.user.lastName} (${req.user.employeeId}).`);
         let usersToBeSaved = [];
         let usersAlreadyPresent = [];
-        let role = await tx.role.findFirst({ where: { name: "Trainee" } });
+        let role = await tx.role.findFirst({ where: { name: ROLES.TRAINEE } });
 
         for (let user of users) {
           let userAlreadyPresnt = await tx.user.findFirst({
@@ -94,6 +95,7 @@ const bulkUsersFromFile = async (req, res, next) => {
         let savedUsers = [];
         if (usersToBeSaved.length) {
           savedUsers = await tx.user.createManyAndReturn({ data: usersToBeSaved });
+          logger.audit(`${savedUsers.length} users are newly added in the system by ${req.user.firstName} ${req.user.lastName} (${req.user.employeeId}).`);
         }
 
         users = [...savedUsers, ...usersAlreadyPresent];
@@ -110,11 +112,12 @@ const bulkUsersFromFile = async (req, res, next) => {
         }
       );
       fs.remove(filePath);
+      logger.audit(`${userBatches.length} users attached to the newly created batch in the system by ${req.user.firstName} ${req.user.lastName} (${req.user.employeeId}).`);
       return res.status(200).json(new ApiResponse(200, userBatches.length + " Users saved", "User uploading is finished"));
     }
   }
   catch (e) {
-    console.log(e);
+    logger.error(e);
     res.status(500).json(new ApiResponse(500, {}, "Internal server error"));
   }
 }
@@ -126,6 +129,7 @@ const addBulkTestDataofUsers = async (req, res, next) => {
       return res.status(400).json(new ApiResponse(400, { errors: errors.array() }, "Errors in request"));
     }
     if (req.file?.filename == null || req.file?.filename == undefined) {
+      logger.warn("File is not sent.");
       return res.status(400).json(new ApiResponse(400, {}, "No file is sent"));
     }
     else {
@@ -143,7 +147,8 @@ const addBulkTestDataofUsers = async (req, res, next) => {
       let missingIdsSystem = employeeIds.filter(id => !presentIdsSystem.some(obj => obj.employeeId === id));
 
       if (missingIdsSystem.length) {
-        return res.status(400).json(new ApiResponse(400, {}, missingIdsSystem.join(",") + " users are not present in system."));
+        logger.warn(missingIdsSystem.join(",") + " users are not present in the system.");
+        return res.status(400).json(new ApiResponse(400, {}, missingIdsSystem.join(",") + " users are not present in the system."));
       }
       let presentIdsBatch = await prisma.user.findMany({
         where: { batches: { some: { batchId: batch.id } }, },
@@ -151,7 +156,8 @@ const addBulkTestDataofUsers = async (req, res, next) => {
       });
       let missingIdsBatch = employeeIds.filter(id => !presentIdsBatch.some(obj => obj.employeeId === id));
       if (missingIdsBatch.length) {
-        return res.status(400).json(new ApiResponse(400, {}, missingIdsBatch.join(",") + " users are not present in Batch."));
+        logger.warn(missingIdsSystem.join(",") + " users are not present in the Batch " + batch.batchName + ".");
+        return res.status(400).json(new ApiResponse(400, {}, missingIdsBatch.join(",") + " users are not present in the Batch."));
       }
       const timeout = employeeIds.length * 1000;
       let assessment = await prisma.$transaction(async tx => {
@@ -192,12 +198,13 @@ const addBulkTestDataofUsers = async (req, res, next) => {
         }
       );
       fs.remove(filePath);
+      logger.debug("Assessment details are saved.");
+      logger.audit(`Assessment ${assessment.assessmentName} is added in system by user ${req.user.firstName} ${req.user.lastName} (${req.user.employeeId})`);
       return res.status(200).json(new ApiResponse(200, assessment, "Assessment details are saved."));
-
     }
   }
   catch (e) {
-    console.log(e);
+    logger.error(e);
     res.status(500).json(new ApiResponse(500, {}, "Internal server error"));
   }
 }
@@ -210,6 +217,7 @@ const allUsers = async (req, res) => {
     });
 
     if (!locationRecord) {
+      logger.warn(`Invalid location ${location}.`);
       return res.status(400).json(new ApiResponse(400, {}, "Invalid location..."));
     }
 
@@ -217,6 +225,7 @@ const allUsers = async (req, res) => {
     if (batchId) {
       let batchRecord = await prisma.batch.findUnique({ where: { id: batchId } });
       if (!batchRecord) {
+        logger.warn(`Invalid batch Id ${batchId}.`);
         return res.status(400).json(new ApiResponse(400, {}, "Invalid batch Id...."));
       }
       clause = Prisma.sql`b."id" = ${BigInt(batchId)} AND b."locationId" = ${locationRecord.id}`;
@@ -238,7 +247,7 @@ const allUsers = async (req, res) => {
     }
     return res.status(200).json(new ApiResponse(200, {}, "No records found"));
   } catch (e) {
-    console.log(e);
+    logger.error(e);
     return res.status(500).json(new ApiResponse(500, {}, "Something went wrong while fetching users"));
   }
 }
@@ -292,10 +301,11 @@ const getTraineeDetails = async (req, res) => {
       if (userWithAssessments) {
         return res.status(200).json(new ApiResponse(200, userWithAssessments));
       }
+      logger.warn(`No trainee found for employeeId ${employeeId}`);
       return res.status(404).json(new ApiResponse(404, {}, `No trainee found for employeeId ${employeeId}`));
     }
   } catch (e) {
-    console.log(e);
+    logger.error(e);
     return res.status(500).json(new ApiResponse(500, {}, "Something went wrong"));
   }
 }
@@ -325,6 +335,7 @@ const getUserDetails = async (req, res) => {
       if (user) {
         return res.status(200).json(new ApiResponse(200, user));
       }
+      logger.warn(`No user found for employeeId ${employeeId}`);
       return res.status(404).json(new ApiResponse(404, {}, `No user found for employeeId ${employeeId}`));
     }
   } catch (e) {
@@ -337,6 +348,7 @@ const addRemark = async (req, res) => {
   let { employeeId, remark } = req.body;
 
   if (!(employeeId && remark)) {
+    logger.warn("employee id or remark is not sent.");
     return res.status(400).json(new ApiResponse(400, {}, "employeeId and remark is not sent."));
   }
   try {
@@ -362,11 +374,12 @@ const addRemark = async (req, res) => {
       })
     });
     if (!foundUser) {
+      logger.warn(`Employee not found with ${employeeId}`);
       return res.status(404).json(new ApiResponse(404, {}, `Employee not found with ${employeeId}`));
     }
     return res.status(200).json(new ApiResponse(200, foundUser));
   } catch (e) {
-    console.log(e);
+    logger.error(e);
     return res.status(500).json(new ApiResponse(500, {}, "Something went wrong"));
   }
 }
