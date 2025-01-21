@@ -4,6 +4,7 @@ import jwt from "jsonwebtoken";
 import path from 'path';
 import prisma from '../../DB/db.config.js';
 import { ApiResponse } from "../../utils/ApiResponse.js";
+import logger from "../../utils/logger.js";
 
 const isPasswordCorrect = async function (password, originalPassword) {
   return await bcrypt.compare(password, originalPassword);
@@ -24,7 +25,7 @@ const generateAccessToken = async (user) => {
     );
     return accessToken;
   } catch (error) {
-    console.log(error);
+    logger.error(error);
     return "";
   }
 }
@@ -33,6 +34,7 @@ const loginUser = async (req, res) => {
   const { employeeId, password } = req.body;
 
   if (!employeeId) {
+    logger.debug("Employee id is empty.")
     return res.status(400).json(new ApiResponse(400, {}, "employee Id is required"));
   }
   const user = await prisma.user.findUnique({
@@ -57,17 +59,20 @@ const loginUser = async (req, res) => {
   });
 
   if (!user) {
-    return res.status(404).json(new ApiResponse(404, {}, "User does not exist"));
+    logger.debug("User does not exist in system.");
+    return res.status(404).json(new ApiResponse(404, {}, "User does not exist in system."));
   }
 
   const isPasswordValid = await isPasswordCorrect(password, user.password);
 
   if (!isPasswordValid) {
-    return res.status(401).json(new ApiResponse(401, {}, "Invalid user credentials"));
+    logger.debug("Invalid user credentials.");
+    return res.status(401).json(new ApiResponse(401, {}, "Invalid user credentials."));
   }
   const accessToken = await generateAccessToken(user);
   if (!accessToken) {
-    return res.status(401).json(new ApiResponse(401, {}, "Invalid user credentials"));
+    logger.debug("Invalid user credentials.");
+    return res.status(401).json(new ApiResponse(401, {}, "Invalid user credentials."));
   }
 
   const options = {
@@ -98,7 +103,7 @@ const downloadTraineeSampleFile = async (req, res) => {
   res.setHeader('Content-Disposition', `attachment; filename="TraineeExcelSample.xlsx"`);
   res.download(filePath, (err) => {
     if (err) {
-      console.error(`Error while sending file: ${err.message}`);
+      logger.error(`Error while sending file: ${err.message}`);
       res.status(500).send('Error occurred while downloading the file.');
     }
   });
@@ -111,7 +116,7 @@ const downloadMarksheetSample = async (req, res) => {
   res.setHeader('Content-Disposition', `attachment; filename="SampleMarksheet.xlsx"`);
   res.download(filePath, (err) => {
     if (err) {
-      console.error(`Error while sending file: ${err.message}`);
+      logger.error(`Error while sending file: ${err.message}`);
       res.status(500).send('Error occurred while downloading the file.');
     }
   });
@@ -122,21 +127,12 @@ const getSelf = (req, res) => {
     new ApiResponse(200, { user: req.user }, "This is your information.")
   );
 }
-// const getAllUserModules = async (req, res) => {
-//   try {
-//     let batch = (await Batch.findOne({ _id: req.user.batch }))[0];
-//     let moduleNames = await Assessment.distinct("moduleName", { _id: { $in: batch.assessments } });
-//     return res.status(200).json(new ApiResponse(200, moduleNames));
-//   } catch (error) {
-//     console.log(error);
-//     return res.status(500).json(new ApiResponse(500, {}, "Something went wrong"));
-//   }
-// }
 
 const chanegPassword = async (req, res) => {
   try {
     let { newPassword, confirmPassword } = req.body;
     if (newPassword != confirmPassword) {
+      logger.debug("Both password strings doesn't match with each other.");
       return res.status(400).json(new ApiResponse(400, {}, "Both password strings doesn't match with each other."));
     }
     const salt = await bcrypt.genSalt(10);
@@ -145,9 +141,10 @@ const chanegPassword = async (req, res) => {
       where: { employeeId: req.user.employeeId },
       data: { password: hashedPassword }
     });
+    logger.debug("Password is changed successfully.");
     return res.status(200).json(new ApiResponse(200, {}, "Password is changed successfully."));
   } catch (error) {
-    console.log(error);
+    logger.error(error);
     return res.status(500).json(new ApiResponse(500, {}, "Something went wrong while changing password."));
   }
 }
@@ -155,6 +152,7 @@ const chanegPassword = async (req, res) => {
 const signOut = async (req, res) => {
   const token = req.cookies?.accessToken;
   if (!token) {
+    logger.warn("User already logged out.");
     return res.status(400).json(new ApiResponse(400, {}, "User already logged out."));
   }
   const options = {
@@ -175,11 +173,11 @@ const signOut = async (req, res) => {
 
 const addProfileImage = async (req, res) => {
   if (req.file?.filename == null || req.file?.filename == undefined) {
+    logger.warn("File is not sent.");
     return res.status(400).json(new ApiResponse(400, {}, "No file is sent"));
   }
   try {
     let { filename } = req.file;
-    let filePath = process.env.IMAGE_UPLOAD_LOCATION + filename;
     let user = await prisma.$transaction(async tx => {
       return await tx.user.update({
         where: { employeeId: req.user.employeeId },
@@ -192,7 +190,7 @@ const addProfileImage = async (req, res) => {
     return res.status(500).json(new ApiResponse(500, { filename: req.file.filename }, "Image uploading failed"));
   }
   catch (e) {
-    console.log(e);
+    logger.error(e);
     return res.status(500).json(new ApiResponse(500, {}, "Something went wrong"));
   }
 }
@@ -204,6 +202,7 @@ const getProfileImage = (req, res) => {
   // Check if the image exists
   fs.access(fullImagePath, fs.constants.F_OK, (err) => {
     if (err) {
+      logger.error(err);
       return res.status(404).send('Image not found');
     }
     // Send the image file

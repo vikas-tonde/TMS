@@ -16,6 +16,7 @@ global.ROOT_DIR = __dirname;
 
 import { populatePostgre } from "./utils/populateDb.js";
 import rootRouterV2 from "./V2/routes/index.js";
+import logger from "./utils/logger.js";
 
 const jsonContent = await readFile('./swagger-output.json', 'utf8');
 const swaggerOutput = JSON.parse(jsonContent);
@@ -39,8 +40,8 @@ const options = {
 
 
 const app = express();
-// app.use(morgan('combined', { stream: { write: (message) => logger.info(message.trim()) } }));
-app.use(morgan('dev'));
+app.use(morgan('combined', { stream: { write: (message) => logger.info(message.trim()) } }));
+// app.use(morgan('dev'));
 app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerOutput, options,));
 app.use(helmet());
 app.use(cookieParser());
@@ -63,5 +64,5 @@ app.use(rootRouterV2);
 // var server = https.createServer(options, app);
 
 await populatePostgre();
-app.listen(port, "0.0.0.0", () => console.log(`Server is runnning on port : http://localhost:${port}`));
+app.listen(port, "0.0.0.0", () => logger.info(`Server is runnning on port : http://localhost:${port}`));
 

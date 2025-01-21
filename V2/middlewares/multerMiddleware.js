@@ -1,6 +1,7 @@
 import multer from "multer";
 import path from 'path';
 import fs from 'fs';
+import logger from "../../utils/logger.js";
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
@@ -28,7 +29,7 @@ const imageStorage = multer.diskStorage({
         // If file exists, delete it first
         fs.unlink(filePath, (unlinkErr) => {
           if (unlinkErr) {
-            console.error('Error deleting the old file:', unlinkErr);
+            logger.error('Error deleting the old file:', unlinkErr);
           }
         });
       }
