@@ -1,6 +1,6 @@
 import express from "express";
 import { validateAddSingleAssessmentDetails, validateAddTraining, validateExistingUserInBatch, validateIncomingBulkTest, validateIncomingBulkUsers, validateUser } from "../../validations/AdminRouteValidations.js";
-import { addBatchForExistingUser, addBulkTestDataofUsers, addLocation, addModules, addRemark, addSingleAssessmentDetails, addTraining, addUser, allUsers, assignTraining, bulkUsersFromFile, deleteAssessment, deleteBatch, deleteLocation, deleteTraining, deleteUser, getAllBatches, getAllBatchesIncludingInactive, getAllModules, getAllRoles, getAllTrainees, getAllTraineesByLocationsAndNotInBatch, getAllTrainings, getAssessmentDetails, getAssessmentScoresForTraineeByBatch, getAssessmentsDetailsForSpecificBatch, getAssessmentsForSpecificBatch, getBatch, getLocations, getTraineeDetails, getUserDetails, resetPassword, setBatchInactive, setUserInactive, updateUserDetails } from "../controllers/AdminController.js";
+import { addBatchForExistingUser, addBulkTestDataofUsers, addLocation, addModules, addRemark, addSingleAssessmentDetails, addTraining, addUser, allUsers, assignTraining, bulkUsersFromFile, deleteAssessment, deleteBatch, deleteLocation, deleteModules, deleteTraining, deleteUser, getAllBatches, getAllBatchesIncludingInactive, getAllModules, getAllRoles, getAllTrainees, getAllTraineesByLocationsAndNotInBatch, getAllTrainings, getAssessmentDetails, getAssessmentScoresForTraineeByBatch, getAssessmentsDetailsForSpecificBatch, getAssessmentsForSpecificBatch, getBatch, getLocations, getTraineeDetails, getUserDetails, resetPassword, setBatchInactive, setUserInactive, updateUserDetails } from "../controllers/AdminController.js";
 import { adminAuthMiddleware } from "../middlewares/adminAuthMiddleware.js";
 import { authMiddleware } from "../middlewares/authMiddleware.js";
 import { upload } from "../middlewares/multerMiddleware.js";
@@ -64,4 +64,5 @@ adminRouterV2.delete("/user/delete/:userId", deleteUser);
 adminRouterV2.delete("/batch/:batchId", deleteBatch);
 adminRouterV2.delete("/location/:locationName", deleteLocation);
 adminRouterV2.delete("/training/:trainingId", deleteTraining);
+adminRouterV2.delete("/modules/delete", deleteModules);
 export default adminRouterV2;
