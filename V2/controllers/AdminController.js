@@ -555,6 +555,7 @@ const setUserInactive = async (req, res) => {
         });
         return count;
       });
+      logger.audit(`${userIds.join(",")} user(s) have been set to ${isActive ? "Active" : "Inactive"}.`);
       return res.status(200).json(new ApiResponse(200, {}, `${userIds.join(",")} user(s) have been set to ${isActive ? "Active" : "Inactive"}.`));
     } catch (error) {
       logger.error(error);
@@ -578,8 +579,8 @@ const setBatchInactive = async (req, res) => {
           data: { isActive: isActive || false }
         });
       });
-      logger.audit(`Batch ${batch.batchName} have been set to ${isActive ? "Active" : "Inactive"} by user ${req.user.firstName} ${req.user.lastName} (${req.user.employeeId}).`);
-      return res.status(200).json(new ApiResponse(200, {}, `Batch ${batch.batchName} have been set to ${isActive ? "Active" : "Inactive"}.`));
+      logger.audit(`Batch: ${batch.batchName} have been set to ${isActive ? "Active" : "Inactive"} by user ${req.user.firstName} ${req.user.lastName} (${req.user.employeeId}).`);
+      return res.status(200).json(new ApiResponse(200, {}, `Batch: ${batch.batchName} have been set to ${isActive ? "Active" : "Inactive"}.`));
     } catch (error) {
       logger.error(error);
       return res.status(500).json(new ApiResponse(500, {}, "Something went wrong while setting batch inactive."));
