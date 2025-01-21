@@ -37,6 +37,7 @@ const bulkUsersFromFile = async (req, res, next) => {
       return res.status(400).json({ errors: errors.array() });
     }
     if (req.file?.filename == null || req.file?.filename == undefined) {
+      logger.warn("File is not sent.");
       return res.status(400).json(new ApiResponse(400, {}, "No file is sent"));
     }
     else {
@@ -44,7 +45,8 @@ const bulkUsersFromFile = async (req, res, next) => {
       const excelData = await readExcelFile(filePath, ["Sheet1"]);
       let users = excelData.Sheet1;
       if (!validateIncomingUsers(users)) {
-        return res.status(400).json(new ApiResponse(400, {}, "All fields not present for all users"));
+        logger.warn("All fields not present for all users.");
+        return res.status(400).json(new ApiResponse(400, {}, "All fields not present for all users."));
       }
       const userBatches = [];
       let timeout = users.length * 1000;
@@ -54,6 +56,7 @@ const bulkUsersFromFile = async (req, res, next) => {
           where: { name: location }
         });
         if (!locationRecord) {
+          logger.warn(`Location ${location} does not present in system.`);
           return res.status(400).json(new ApiResponse(400, {}, "Invalid value for location"));
         }
         let oldBatch = await tx.batch.updateMany({
@@ -67,6 +70,7 @@ const bulkUsersFromFile = async (req, res, next) => {
         let newBatch = await tx.batch.create({
           data: { batchName: batchName, locationId: locationRecord.id }
         });
+        log.audit(`Batch ${newBatch.batchName} is created by user ${req.user.firstName} ${req.user.lastName} (${req.user.employeeId}).`);
         let usersToBeSaved = [];
         let usersAlreadyPresent = [];
         let role = await tx.role.findFirst({ where: { name: "Trainee" } });

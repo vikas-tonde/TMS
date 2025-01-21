@@ -65,4 +65,3 @@ app.use(rootRouterV2);
 
 await populatePostgre();
 app.listen(port, "0.0.0.0", () => logger.info(`Server is runnning on port : http://localhost:${port}`));
-

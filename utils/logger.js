@@ -43,17 +43,41 @@ const formatTimestamp = () => {
   });
 };
 
+const logLevels = {
+  levels: {
+    audit: 0,  // Your custom level
+    error: 1,
+    warn: 2,
+    info: 3,
+    http: 4,
+    verbose: 5,
+    debug: 6,
+    silly: 7,
+  },
+  colors: {
+    error: 'red',
+    warn: 'yellow',
+    info: 'green',
+    http: 'magenta',
+    verbose: 'cyan',
+    debug: 'blue',
+    silly: 'grey',
+    audit: 'magenta',  // Custom color for userActivity
+  }
+};
+
 const logger = winston.createLogger({
+  levels: logLevels.levels,
   level: process.env.NODE_ENV === "production" ? "info" : "debug",
   format: winston.format.combine(
     winston.format.timestamp({
-      format:formatTimestamp
+      format: formatTimestamp
     }),
     winston.format.errors({ stack: true }),
     winston.format.splat(),
     winston.format.json()
   ),
-  defaultMeta:{service: "TMS-backend"} ,
+  defaultMeta: { service: "TMS-backend" },
   transports: [
     new winston.transports.Console({
       format: winston.format.combine(
@@ -62,13 +86,20 @@ const logger = winston.createLogger({
       ),
     }),
     new WinstonDailyRotateFile({
-
       filename: process.env.LOGS_FILE_PATH + '/app-%DATE%.log',
       datePattern: 'YYYY-MM-DD',
       maxFiles: '30d', // Keep logs for 30 days
     }),
+    new WinstonDailyRotateFile({
+      filename: process.env.LOGS_FILE_PATH + '/audit_%DATE%_log.log',
+      level: 'audit',
+      datePattern: 'YYYY-MM-DD',
+      maxFiles: '30d',  // Retain logs for 30 days
+    })
   ],
 });
+winston.addColors(logLevels.colors);
+
 
 // Handle uncaught exceptions
 winston.exceptions.handle(
