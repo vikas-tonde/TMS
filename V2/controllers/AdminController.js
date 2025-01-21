@@ -1013,7 +1013,7 @@ const addModules = async (req, res) => {
     let { modules } = req.body;
     let result = await prisma.module.findMany({ where: { moduleName: { in: modules } } });
     if (result.length == modules.length) {
-      return res.status(400).json(new ApiResponse(400, {}, "All modules are already present in system."));
+      return res.status(400).json(new ApiResponse(400, {}, "Please enter one or more unique modules."));
     }
     if (result.length) {
       let names = result.map(module => module.moduleName);
