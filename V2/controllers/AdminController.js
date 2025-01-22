@@ -785,8 +785,8 @@ const deleteAssessment = async (req, res) => {
       return res.status(400).json(new ApiResponse(400, {}, "Assessment does not exist in system."));
     }
     await prisma.assessment.delete({ where: { id: BigInt(assessmentId) } });
-    logger.audit(`Assessment ${assessment.assessmentName} is deleted by ${req.user.firstName} ${req.user.lastName} (${req.user.employeeId})`);
-    return res.status(200).json(new ApiResponse(200, {}, `Assessment ${assessment.assessmentName} deleted successfully`));
+    logger.audit(`Assessment: ${assessment.assessmentName} is deleted by ${req.user.firstName} ${req.user.lastName} (${req.user.employeeId})`);
+    return res.status(200).json(new ApiResponse(200, {}, `Assessment: ${assessment.assessmentName} deleted successfully`));
   }
   catch (e) {
     logger.error(e);
@@ -802,8 +802,8 @@ const deleteUser = async (req, res) => {
       return res.status(400).json(new ApiResponse(400, {}, "User does not exist in system."));
     }
     await prisma.user.delete({ where: { id: BigInt(userId) } });
-    logger.audit(`User ${user.employeeId} is deleted by ${req.user.firstName} ${req.user.lastName} (${req.user.employeeId})`);
-    return res.status(200).json(new ApiResponse(200, {}, `User ${user.employeeId} deleted successfully`));
+    logger.audit(`User: ${user.employeeId} is deleted by ${req.user.firstName} ${req.user.lastName} (${req.user.employeeId})`);
+    return res.status(200).json(new ApiResponse(200, {}, `User: ${user.employeeId} deleted successfully`));
   }
   catch (e) {
     logger.error(e);
@@ -819,8 +819,8 @@ const deleteBatch = async (req, res) => {
       return res.status(400).json(new ApiResponse(400, {}, "Batch does not exist in system."));
     }
     await prisma.batch.delete({ where: { id: BigInt(batchId) } });
-    logger.audit(`Batch ${batch.batchName} is deleted by ${req.user.firstName} ${req.user.lastName} (${req.user.employeeId}).`);
-    return res.status(200).json(new ApiResponse(200, {}, `Batch ${batch.batchName} is deleted successfully`));
+    logger.audit(`Batch: ${batch.batchName} is deleted by ${req.user.firstName} ${req.user.lastName} (${req.user.employeeId}).`);
+    return res.status(200).json(new ApiResponse(200, {}, `Batch: ${batch.batchName} is deleted successfully`));
   }
   catch (e) {
     logger.error(e);
@@ -831,11 +831,16 @@ const deleteBatch = async (req, res) => {
 const deleteTraining = async (req, res) => {
   try {
     let { trainingId } = req.params;
+    let training = await prisma.training.findUnique({ where: { id: BigInt(trainingId) } });
+    if(!training){
+      return res.status(400).json(new ApiResponse(400, {}, "Training does not exist in system."));
+    }
     await prisma.training.delete({ where: { id: BigInt(trainingId) } });
-    return res.status(200).json(new ApiResponse(200, {}, "Training deleted successfully"));
+    logger.error(`Training: ${training.trainingName} deleted by ${req.user.firstName} ${req.user.lastName} (${req.user.employeeId}).`);
+    return res.status(200).json(new ApiResponse(200, {}, `Training: ${training.trainingName} deleted successfully.`));
   }
   catch (e) {
-    console.log(e);
+    logger.error(e);
     return res.status(500).json(new ApiResponse(500, {}, "Something went wrong while deleting training."));
   }
 }
@@ -845,13 +850,14 @@ const deleteLocation = async (req, res) => {
     let { locationName } = req.params;
     let location = await prisma.location.findFirst({ where: { name: locationName } });
     if (!location) {
-      return res.status(400).json(new ApiResponse(400, {}, `Location not found: Invalid location id.`));
+      return res.status(400).json(new ApiResponse(400, {}, `Location not found: Invalid location ${locationName}.`));
     }
     await prisma.location.delete({ where: { id: (location.id) } });
+    logger.audit(`Location: ${locationName} deleted successfully by ${req.user.firstName} ${req.user.lastName} (${req.user.employeeId})`);
     return res.status(200).json(new ApiResponse(200, {}, `Location: ${locationName} deleted successfully`));
   }
   catch (e) {
-    console.log(e);
+    logger.error(e);
     return res.status(500).json(new ApiResponse(500, {}, `Something went wrong while deleting Location: ${locationName}.`));
   }
 }

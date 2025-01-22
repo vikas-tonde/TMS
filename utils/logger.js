@@ -75,7 +75,10 @@ const logger = winston.createLogger({
     }),
     winston.format.errors({ stack: true }),
     winston.format.splat(),
-    winston.format.json()
+    // winston.format.json()
+    winston.format.printf(({ timestamp, level, message, ...rest }) => {
+      return `${timestamp} [${level}] ${message} ${JSON.stringify(rest)}`;
+    })
   ),
   defaultMeta: { service: "TMS-backend" },
   transports: [

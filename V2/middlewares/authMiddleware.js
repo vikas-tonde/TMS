@@ -6,8 +6,6 @@ import logger from "../../utils/logger.js";
 export const authMiddleware = async (req, res, next) => {
   try {
     const token = req.cookies?.accessToken;
-    console.log(token);
-
     if (!token) {
       logger.warn("Token not found, Unauthorized request.");
       return res.status(401).json(new ApiResponse(401, {}, "Unauthorized request"));
