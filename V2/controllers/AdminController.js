@@ -899,8 +899,36 @@ const deleteModules = async (req, res) => {
     let moduleId = result.map(module => module.id);
     await prisma.module.deleteMany({ where: { id: { in: moduleId } } });
 
-    logger.audit(`Modules: [${modules.join(",")}] are deleted successfully by ${req.user.firstName} ${req.user.lastName} (${req.user.employeeId}).`);
-    return res.status(200).json(new ApiResponse(200, {}, `Modules: [${modules.join(",")}] are deleted successfully.`));
+    logger.audit(`Modules: [${modules.join(", ")}] are deleted successfully by ${req.user.firstName} ${req.user.lastName} (${req.user.employeeId}).`);
+    return res.status(200).json(new ApiResponse(200, {}, `Modules: [${modules.join(", ")}] are deleted successfully.`));
+  }
+  catch (error) {
+    return res.status(500).json(new ApiResponse(500, {}, 'Something went wrong while deleting the modules.'));
+  }
+};
+
+const deleteUsers = async (req, res) => {
+  try {
+    let { employeeIds } = req.body;
+    
+    if (!employeeIds || employeeIds.length === 0) {
+      return res.status(400).json(new ApiResponse(400, {}, 'Zero users selected for deletion.'));
+    }
+    
+    let result = await prisma.user.findMany({ where: { employeeId: { in: employeeIds } } });
+    
+    if (!result) {
+      return res.status(400).json(new ApiResponse(400, {}, 'Selected users are not found in the system.'));
+    }
+    
+    if (result.length < employeeIds.length) {
+      return res.status(400).json(new ApiResponse(400, {}, 'Request of extra users to be deleted which are not in the system.'));
+    }
+
+    let userIds = result.map(user => user.id);
+    await prisma.user.deleteMany({ where: { id: { in: userIds } } });
+    
+    return res.status(200).json(new ApiResponse(200, {}, `Users: [${userIds.join(", ")}] are deleted successfully.`));
   }
   catch (error) {
     return res.status(500).json(new ApiResponse(500, {}, 'Something went wrong while deleting the modules.'));
@@ -1154,6 +1182,7 @@ export {
   deleteBatch,
   addLocation,
   addTraining,
+  deleteUsers,
   getAllRoles,
   getLocations,
   getAllModules,
