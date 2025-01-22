@@ -872,6 +872,16 @@ const deleteLocation = async (req, res) => {
     if (!location) {
       return res.status(400).json(new ApiResponse(400, {}, `Location not found: Invalid location ${locationName}.`));
     }
+
+    let batches = await prisma.batch.findMany({ where: { locationId: location.id } });
+    if (batches.length > 0) {
+      return res.status(400).json(new ApiResponse(400, {}, `Location: ${locationName} is associated with batches. Please delete the batches first.`));
+    }
+
+    let users = await prisma.user.findMany({ where: { locationId: location.id } });
+    if (users.length > 0) {
+      return res.status(400).json(new ApiResponse(400, {}, `Location: ${locationName} is associated with users. Please delete the users first.`));
+    }
     await prisma.location.delete({ where: { id: (location.id) } });
     logger.audit(`Location: ${locationName} deleted successfully by ${req.user.firstName} ${req.user.lastName} (${req.user.employeeId})`);
     return res.status(200).json(new ApiResponse(200, {}, `Location: ${locationName} deleted successfully`));
@@ -898,8 +908,18 @@ const deleteModules = async (req, res) => {
       return res.status(400).json(new ApiResponse(400, {}, 'Request of extra modules to be deleted which are not in the system.'));
     }
 
-    let moduleId = result.map(module => module.id);
-    await prisma.module.deleteMany({ where: { id: { in: moduleId } } });
+    let moduleIds = result.map(module => module.id);
+    let trainings = await prisma.training.findMany({ where: { modules: { some: { moduleId: { in: moduleIds } } } } });
+    if (trainings.length > 0) {
+      return res.status(400).json(new ApiResponse(400, {}, 'Modules are associated with trainings. Please delete the trainings first.'));
+    }
+
+    let assessments = await prisma.assessment.findMany({ where: { moduleId: { in: moduleIds } } });
+    if (assessments.length > 0) {
+      return res.status(400).json(new ApiResponse(400, {}, 'Modules are associated with assessments. Please delete the assessments first.'));
+    }
+
+    await prisma.module.deleteMany({ where: { id: { in: moduleIds } } });
 
     logger.audit(`Modules: [${modules.join(", ")}] are deleted successfully by ${req.user.firstName} ${req.user.lastName} (${req.user.employeeId}).`);
     return res.status(200).json(new ApiResponse(200, {}, `Modules: [${modules.join(", ")}] are deleted successfully.`));
@@ -913,17 +933,17 @@ const deleteModules = async (req, res) => {
 const deleteUsers = async (req, res) => {
   try {
     let { employeeIds } = req.body;
-    
+
     if (!employeeIds || employeeIds.length === 0) {
       return res.status(400).json(new ApiResponse(400, {}, 'Zero users selected for deletion.'));
     }
-    
+
     let result = await prisma.user.findMany({ where: { employeeId: { in: employeeIds } } });
-    
+
     if (!result) {
       return res.status(400).json(new ApiResponse(400, {}, 'Selected users are not found in the system.'));
     }
-    
+
     if (result.length < employeeIds.length) {
       return res.status(400).json(new ApiResponse(400, {}, 'Request of extra users to be deleted which are not in the system.'));
     }

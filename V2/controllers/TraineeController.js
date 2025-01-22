@@ -78,7 +78,6 @@ const getQuizPercentage = async (req, res) => {
     JOIN public."Assessment" a ON a.id = ua."assessmentId"
     where ua."userId"=${req.user.id}
     `;
-    console.log(result);
     return res.status(200).json(new ApiResponse(200, result[0], "percentage of quizes fetched."));
   } catch (error) {
     console.log(error);
