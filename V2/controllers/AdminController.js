@@ -335,15 +335,15 @@ const getUserDetails = async (req, res) => {
               }
             }
           },
-          // trainings: {
-          //   select: {
-          //     training: {
-          //       select: {
-          //         trainingName: true,
-          //       }
-          //     }
-          //   }
-          // },
+          trainings: {
+            select: {
+              training: {
+                select: {
+                  trainingName: true,
+                }
+              }
+            }
+          },
           id: true,
           role: true,
           isActive: true,

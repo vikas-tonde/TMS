@@ -94,7 +94,7 @@ const logger = winston.createLogger({
       maxFiles: '30d', // Keep logs for 30 days
     }),
     new WinstonDailyRotateFile({
-      filename: process.env.LOGS_FILE_PATH + '/audit_%DATE%_log.log',
+      filename: process.env.LOGS_FILE_PATH + '/audit_%DATE%.log',
       level: 'audit',
       datePattern: 'YYYY-MM-DD',
       maxFiles: '30d',  // Retain logs for 30 days
