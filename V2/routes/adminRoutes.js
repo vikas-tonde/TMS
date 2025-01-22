@@ -51,6 +51,7 @@ adminRouterV2.post("/location/add", addLocation);
 adminRouterV2.post("/modules/add", addModules);
 adminRouterV2.post("/training/add", validateAddTraining, addTraining);
 adminRouterV2.post("/training/assign", assignTraining);
+adminRouterV2.post("/modules/delete", deleteModules);
 
 adminRouterV2.put('/users/toggle-active', setUserInactive);
 adminRouterV2.put('/batch/toggle-active', setBatchInactive);
@@ -64,5 +65,4 @@ adminRouterV2.delete("/user/delete/:userId", deleteUser);
 adminRouterV2.delete("/batch/:batchId", deleteBatch);
 adminRouterV2.delete("/location/:locationName", deleteLocation);
 adminRouterV2.delete("/training/:trainingId", deleteTraining);
-adminRouterV2.delete("/modules/delete", deleteModules);
 export default adminRouterV2;

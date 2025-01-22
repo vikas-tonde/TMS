@@ -326,6 +326,24 @@ const getUserDetails = async (req, res) => {
           employeeId: true,
           firstName: true,
           lastName: true,
+          batches: {
+            select: {
+              batch: {
+                select: {
+                  batchName: true,
+                }
+              }
+            }
+          },
+          // trainings: {
+          //   select: {
+          //     training: {
+          //       select: {
+          //         trainingName: true,
+          //       }
+          //     }
+          //   }
+          // },
           id: true,
           role: true,
           isActive: true,
@@ -832,7 +850,7 @@ const deleteTraining = async (req, res) => {
   try {
     let { trainingId } = req.params;
     let training = await prisma.training.findUnique({ where: { id: BigInt(trainingId) } });
-    if(!training){
+    if (!training) {
       return res.status(400).json(new ApiResponse(400, {}, "Training does not exist in system."));
     }
     await prisma.training.delete({ where: { id: BigInt(trainingId) } });
@@ -863,26 +881,32 @@ const deleteLocation = async (req, res) => {
 }
 
 const deleteModules = async (req, res) => {
-  console.log("Delete modules request received:", req.params);
-  // try {
-  //   let { moduleNames } = req.body;
-  //   if (!moduleNames || moduleNames.length === 0) {
-  //     return res.status(400).json(new ApiResponse(400, {}, 'No module names provided.'));
-  //   }
+  // console.log("Delete modules request received:", req.body.modules);
+  // console.log("Delete modules request received:", req.body);
+  try {
+    let { modules } = req.body;
+    if (!modules || modules.length === 0) {
+      return res.status(400).json(new ApiResponse(400, {}, 'No module names provided.'));
+    }
 
-  //   for (let moduleName of moduleNames) {
-  //     let module = await prisma.module.findFirst({ where: { name: moduleName } });
-  //     if (!module) {
-  //       res.status(400).json(new ApiResponse(400, {}, `Module: ${moduleName} not found.`));
-  //       continue;
-  //     }
-  //     await prisma.module.delete({ where: { id: module.id } });
-  //   }
-  //   return res.status(200).json(new ApiResponse(200, {}, 'All Modules deleted successfully'));
-  // }
-  // catch (error) {
-  //   return res.status(500).json(new ApiResponse(500, {}, 'Something went wrong while deleting the modules.'));
-  // }
+    let result = await prisma.module.findMany({ where: { moduleName: { in: modules } } });
+    if (!result) {
+      return res.status(400).json(new ApiResponse(400, {}, 'Provided modules are not found in the system.'));
+    }
+
+    if (result.length < modules.length) {
+      return res.status(400).json(new ApiResponse(400, {}, 'Request of extra modules to be deleted which are not in the system.'));
+    }
+
+    let moduleId = result.map(module => module.id);
+    await prisma.module.deleteMany({ where: { id: { in: moduleId } } });
+
+    logger.audit(`Modules: [${modules.join(",")}] are deleted successfully by ${req.user.firstName} ${req.user.lastName} (${req.user.employeeId}).`);
+    return res.status(200).json(new ApiResponse(200, {}, `Modules: [${modules.join(",")}] are deleted successfully.`));
+  }
+  catch (error) {
+    return res.status(500).json(new ApiResponse(500, {}, 'Something went wrong while deleting the modules.'));
+  }
 };
 
 const addBatchForExistingUser = async (req, res) => {
