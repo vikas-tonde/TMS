@@ -357,7 +357,7 @@ const getUserDetails = async (req, res) => {
       return res.status(404).json(new ApiResponse(404, {}, `No user found for employeeId ${employeeId}`));
     }
   } catch (e) {
-    console.log(e);
+    logger.error(e);
     return res.status(500).json(new ApiResponse(500, {}, "Something went wrong"));
   }
 }
@@ -419,7 +419,7 @@ const getAllBatches = async (req, res) => {
     }
     return res.status(404).json(new ApiResponse(404, {}, `No batches found for location ${location}`));
   } catch (error) {
-    console.log(error);
+    logger.error(error);
     return res.status(500).json(new ApiResponse(500, {}, "Something went wrong"));
   }
 }
@@ -432,7 +432,7 @@ const getAllBatchesIncludingInactive = async (req, res) => {
     }
     return res.status(404).json(new ApiResponse(404, {}, `No batches found for location ${location}`));
   } catch (error) {
-    console.log(error);
+    logger.error(error);
     return res.status(500).json(new ApiResponse(500, {}, "Something went wrong"));
   }
 }
@@ -445,7 +445,7 @@ const getAllTrainings = async (req, res) => {
     }
     return res.status(404).json(new ApiResponse(404, {}, `No trainings found for location ${location}`));
   } catch (error) {
-    console.log(error);
+    logger.error(error);
     return res.status(500).json(new ApiResponse(500, {}, "Something went wrong"));
   }
 }
@@ -464,7 +464,7 @@ const getBatch = async (req, res) => {
     }
     return res.status(404).json(new ApiResponse(404, {}, `No batch found.`));
   } catch (error) {
-    console.log(error);
+    logger.error(error);
     return res.status(500).json(new ApiResponse(500, {}, `Unable to find the batch with ID :${req.params.batchId}`));
   }
 }
@@ -478,7 +478,7 @@ const getAllModules = async (req, res) => {
     }
     return res.status(404).json(new ApiResponse(404, {}, "No modules found."));
   } catch (error) {
-    console.log(error);
+    logger.error(error);
     return res.status(500).json(new ApiResponse(500, {}, "Something went wrong"));
   }
 }
@@ -502,7 +502,7 @@ const getAllTrainees = async (req, res) => {
     }
     return res.status(200).json(new ApiResponse(200, {}, "No trainees found"));
   } catch (error) {
-    console.log(error);
+    logger.error(error);
     return res.status(500).json(new ApiResponse(500, {}, "Something went wrong"));
   }
 }
@@ -546,13 +546,14 @@ const addUser = async (req, res) => {
         return user;
       });
       if (user) {
+        logger.audit(`User: [${user.firstName} ${user.lastName} (${user.employeeId})] is added by user: [${req.user.firstName} ${req.user.lastName} (${req.user.employeeId})].`);
         return res.status(200).json(new ApiResponse(200, user, "User registered successfully."));
       }
       return res.status(500).json(new ApiResponse(500, {}, "Something went wrong, user registration failed."));
 
     }
     catch (e) {
-      console.log(e);
+      logger.error(e);
       return res.status(500).json(new ApiResponse(500, {}, "Something went wrong while registering the user."));
     }
   }
@@ -622,7 +623,7 @@ const getAssessmentsForSpecificBatch = async (req, res) => {
     });
     return res.status(200).json(new ApiResponse(200, assessments, "Assessments fetched successfully"));
   } catch (error) {
-    console.log(error);
+    logger.error(error);
     return res.status(500).json(new ApiResponse(500, {}, "Something went wrong while fetching Assessments."));
   }
 }
@@ -644,7 +645,7 @@ const getAssessmentsDetailsForSpecificBatch = async (req, res) => {
     });
     return res.status(200).json(new ApiResponse(200, assessments, "Assessments fetched successfully"));
   } catch (error) {
-    console.log(error);
+    logger.error(error);
     return res.status(500).json(new ApiResponse(500, {}, "Something went wrong while fetching Assessments."));
 
   }
@@ -685,7 +686,7 @@ const addSingleAssessmentDetails = async (req, res) => {
       }
       return res.status(200).json(new ApiResponse(200, {}, `Exam details ${operation} successfully for employee id: ${employeeId}`));
     } catch (error) {
-      console.log(error);
+      logger.error(error);
       return res.status(500).json(new ApiResponse(500, {}, "Something went wrong while adding exam details."));
     }
   }
@@ -732,7 +733,7 @@ const getAssessmentDetails = async (req, res) => {
       return res.status(200).json(new ApiResponse(200, {}, `No data found`));
     }
   } catch (e) {
-    console.log(e);
+    logger.error(e);
     return res.status(500).json(new ApiResponse(500, {}, "Something went wrong"));
   }
 }
@@ -746,7 +747,7 @@ const getLocations = async (req, res) => {
     }
     return res.status(404).json(new ApiResponse(404, {}, `No location(s) found.`));
   } catch (error) {
-    console.log(error);
+    logger.error(error);
     return res.status(500).json(new ApiResponse(500, {}, "Something went wrong while fetching locations."));
   }
 }
@@ -781,7 +782,7 @@ const getAllTraineesByLocationsAndNotInBatch = async (req, res) => {
     });
     return res.status(200).json(new ApiResponse(200, users, `${users.length} users found.`));
   } catch (error) {
-    console.log(error);
+    logger.error(error);
     return res.status(500).json(new ApiResponse(500, {}, "Something went wrong while fetching trainees."));
   }
 }
@@ -791,6 +792,7 @@ const getAllRoles = async (req, res) => {
     let roles = await prisma.role.findMany({});
     res.status(200).json(new ApiResponse(200, roles));
   } catch (error) {
+    logger.error(error);
     return res.status(500).json(new ApiResponse(500, {}, "Something went wrong while fetching roles."));
   }
 }
@@ -903,6 +905,7 @@ const deleteModules = async (req, res) => {
     return res.status(200).json(new ApiResponse(200, {}, `Modules: [${modules.join(", ")}] are deleted successfully.`));
   }
   catch (error) {
+    logger.error(error);
     return res.status(500).json(new ApiResponse(500, {}, 'Something went wrong while deleting the modules.'));
   }
 };
@@ -926,11 +929,13 @@ const deleteUsers = async (req, res) => {
     }
 
     let userIds = result.map(user => user.id);
+    let empIds = result.map(user => user.employeeId);
     await prisma.user.deleteMany({ where: { id: { in: userIds } } });
-    
-    return res.status(200).json(new ApiResponse(200, {}, `Users: [${userIds.join(", ")}] are deleted successfully.`));
+    logger.audit(`Users: [${empIds.join(", ")}] are deleted successfully ${req.user.firstName} ${req.user.lastName} (${req.user.employeeId})`);
+    return res.status(200).json(new ApiResponse(200, {}, `Users: [${empIds.join(", ")}] are deleted successfully.`));
   }
   catch (error) {
+    logger.error(error);
     return res.status(500).json(new ApiResponse(500, {}, 'Something went wrong while deleting the modules.'));
   }
 };
@@ -971,7 +976,7 @@ const resetPassword = async (req, res) => {
     user = await prisma.user.update({ where: { id: user.id }, data: { password: password } });
     return res.status(200).json(new ApiResponse(200, {}, `Password of user ${user.employeeId} is set with ${user.firstName}@123.`));
   } catch (error) {
-    console.log(error);
+    logger.error(error);
     return res.status(500).json(new ApiResponse(500, {}, "Something went wrong while resetting password."));
   }
 }
@@ -1060,7 +1065,7 @@ const getAssessmentScoresForTraineeByBatch = async (req, res) => {
     }
     return res.status(200).json(new ApiResponse(200, data, "Assessment details fetched successfully."));
   } catch (error) {
-    console.log(error);
+    logger.error(error);
     return res.status(500).json(new ApiResponse(500, {}, "Something went wrong while fetching assessments."));
   }
 }
