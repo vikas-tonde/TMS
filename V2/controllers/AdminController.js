@@ -71,7 +71,7 @@ const bulkUsersFromFile = async (req, res, next) => {
         let newBatch = await tx.batch.create({
           data: { batchName: batchName, locationId: locationRecord.id }
         });
-        log.audit(`Batch ${newBatch.batchName} is created by user ${req.user.firstName} ${req.user.lastName} (${req.user.employeeId}).`);
+        logger.audit(`Batch ${newBatch.batchName} is created by user ${req.user.firstName} ${req.user.lastName} (${req.user.employeeId}).`);
         let usersToBeSaved = [];
         let usersAlreadyPresent = [];
         let role = await tx.role.findFirst({ where: { name: ROLES.TRAINEE } });
