@@ -862,6 +862,29 @@ const deleteLocation = async (req, res) => {
   }
 }
 
+const deleteModules = async (req, res) => {
+  console.log("Delete modules request received:", req.params);
+  // try {
+  //   let { moduleNames } = req.body;
+  //   if (!moduleNames || moduleNames.length === 0) {
+  //     return res.status(400).json(new ApiResponse(400, {}, 'No module names provided.'));
+  //   }
+
+  //   for (let moduleName of moduleNames) {
+  //     let module = await prisma.module.findFirst({ where: { name: moduleName } });
+  //     if (!module) {
+  //       res.status(400).json(new ApiResponse(400, {}, `Module: ${moduleName} not found.`));
+  //       continue;
+  //     }
+  //     await prisma.module.delete({ where: { id: module.id } });
+  //   }
+  //   return res.status(200).json(new ApiResponse(200, {}, 'All Modules deleted successfully'));
+  // }
+  // catch (error) {
+  //   return res.status(500).json(new ApiResponse(500, {}, 'Something went wrong while deleting the modules.'));
+  // }
+};
+
 const addBatchForExistingUser = async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -1114,6 +1137,7 @@ export {
   getAllModules,
   resetPassword,
   getAllBatches,
+  deleteModules,
   deleteTraining,
   deleteLocation,
   assignTraining,
