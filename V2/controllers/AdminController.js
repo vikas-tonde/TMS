@@ -881,8 +881,6 @@ const deleteLocation = async (req, res) => {
 }
 
 const deleteModules = async (req, res) => {
-  // console.log("Delete modules request received:", req.body.modules);
-  // console.log("Delete modules request received:", req.body);
   try {
     let { modules } = req.body;
     if (!modules || modules.length === 0) {
@@ -1070,8 +1068,8 @@ const addModules = async (req, res) => {
       let names = result.map(module => module.moduleName);
       modules = modules.filter(module => !names.includes(module));
     }
-    modules = modules.map(module => { return { moduleName: module } });
-    let savedModules = await prisma.module.createMany({ data: modules });
+    let modulesToBeSaved = modules.map(module => { return { moduleName: module } });
+    let savedModules = await prisma.module.createMany({ data: modulesToBeSaved });
     logger.info(`${modules.join(",")} Module(s) saved successfully.`);
     return res.status(200).json(new ApiResponse(200, savedModules, `${modules.join(",")} Module(s) saved successfully.`));
   } catch (error) {
