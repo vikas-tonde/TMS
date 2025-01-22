@@ -878,7 +878,6 @@ const deleteModules = async (req, res) => {
   //     }
   //     await prisma.module.delete({ where: { id: module.id } });
   //   }
-  //   return res.status(200).json(new ApiResponse(200, {}, 'All Modules deleted successfully'));
   // }
   // catch (error) {
   //   return res.status(500).json(new ApiResponse(500, {}, 'Something went wrong while deleting the modules.'));
@@ -1046,8 +1045,8 @@ const addModules = async (req, res) => {
       let names = result.map(module => module.moduleName);
       modules = modules.filter(module => !names.includes(module));
     }
-    modules = modules.map(module => { return { moduleName: module } });
-    let savedModules = await prisma.module.createMany({ data: modules });
+    let modulesToBeSaved = modules.map(module => { return { moduleName: module } });
+    let savedModules = await prisma.module.createMany({ data: modulesToBeSaved });
     logger.info(`${modules.join(",")} Module(s) saved successfully.`);
     return res.status(200).json(new ApiResponse(200, savedModules, `${modules.join(",")} Module(s) saved successfully.`));
   } catch (error) {
