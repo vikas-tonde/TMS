@@ -165,9 +165,8 @@ const addBulkTestDataofUsers = async (req, res, next) => {
           where: { moduleName: req.body.moduleName }
         });
         if (!module) {
-          module = await tx.module.create({
-            data: { moduleName: req.body.moduleName }
-          });
+          logger.warn(`Module ${req.body.moduleName} does not present in system.`);
+          return res.status(400).json(new ApiResponse(400, {}, "Invalid value for module"));
         }
         let users = [];
         for (const object of excelData.Sheet1) {
@@ -882,6 +881,7 @@ const deleteLocation = async (req, res) => {
     if (users.length > 0) {
       return res.status(400).json(new ApiResponse(400, {}, `Location: ${locationName} is associated with users. Please delete the users first.`));
     }
+
     await prisma.location.delete({ where: { id: (location.id) } });
     logger.audit(`Location: ${locationName} deleted successfully by ${req.user.firstName} ${req.user.lastName} (${req.user.employeeId})`);
     return res.status(200).json(new ApiResponse(200, {}, `Location: ${locationName} deleted successfully`));
@@ -1197,6 +1197,52 @@ const assignTraining = async (req, res) => {
   }
 }
 
+const updateTraining = async (req, res) => {
+  let { trainingId } = req.params;
+  let { trainingName, duration, modules } = req.body;
+  try {
+    let training = await prisma.training.findUnique({ where: { id: BigInt(trainingId) } });
+    if (!training) {
+      return res.status(400).json(new ApiResponse(400, {}, `Training with id [${trainingId}] does not exist in system.`));
+    }
+    let foundModules = await prisma.module.findMany({
+      where: { moduleName: { in: modules } },
+      select: { id: true }
+    });
+    let updatedTraining = await prisma.training.update({
+      where: { id: BigInt(trainingId) },
+      data: {
+        trainingName, duration: parseInt(duration),
+        modules: { set: foundModules.map(module => ({ moduleId: module.id })) }
+      }
+    });
+    logger.audit(`Training: ${training.trainingName} updated by ${req.user.firstName} ${req.user.lastName} (${req.user.employeeId}).`);
+    return res.status(200).json(new ApiResponse(200, updatedTraining, `Training: ${training.trainingName} updated successfully.`));
+  } catch (error) {
+    logger.error(error);
+    return res.status(500).json(new ApiResponse(500, {}, "Something went wrong while updating training."));
+    
+  }
+}
+
+const getTrainingDetails = async (req, res) => {
+  try {
+    let { trainingId } = req.params;
+    let training = await prisma.training.findUnique({
+      where: { id: BigInt(trainingId) },
+      include: { modules: { select: { module: true } }
+      }
+    });
+    if (training) {
+      return res.status(200).json(new ApiResponse(200, training));
+    }
+    return res.status(404).json(new ApiResponse(404, {}, "Training not found."));
+  } catch (error) {
+    logger.error(error);
+    return res.status(500).json(new ApiResponse(500, {}, "Something went wrong while fetching training details."));
+  }
+}
+
 export {
   addUser,
   getBatch,
@@ -1218,6 +1264,7 @@ export {
   deleteLocation,
   assignTraining,
   getAllTrainees,
+  updateTraining,
   getUserDetails,
   setUserInactive,
   getAllTrainings,
@@ -1226,6 +1273,7 @@ export {
   getTraineeDetails,
   updateUserDetails,
   bulkUsersFromFile,
+  getTrainingDetails,
   getAssessmentDetails,
   addBulkTestDataofUsers,
   addBatchForExistingUser,

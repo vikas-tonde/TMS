@@ -1,35 +1,5 @@
-// logger.js
 import winston from 'winston';
 import WinstonDailyRotateFile from 'winston-daily-rotate-file';
-// Define the log format
-// const logFormat = winston.format.printf(({ timestamp, level, message }) => {
-//   return `${timestamp} [${level}] ${message}`;
-// });
-
-// // Create the logger
-// const logger = winston.createLogger({
-//   level: 'info',  // Default logging level
-//   format: winston.format.combine(
-//     winston.format.timestamp(),
-//     logFormat
-//   ),
-//   transports: [
-//     // Console log
-//     new winston.transports.Console({
-//       format: winston.format.combine(
-//         winston.format.colorize(),
-//         winston.format.simple()
-//       ),
-//     }),
-//     // Rotating file logs
-// new WinstonDailyRotateFile({
-//   filename: 'logs/app-%DATE%.log',
-//   datePattern: 'YYYY-MM-DD',
-//   maxFiles: '30d', // Keep logs for 30 days
-// }),
-//   ],
-// });
-
 const formatTimestamp = () => {
   const now = new Date();
   return now.toLocaleString('default', {
@@ -66,18 +36,24 @@ const logLevels = {
   }
 };
 
+
 const logger = winston.createLogger({
   levels: logLevels.levels,
   level: process.env.NODE_ENV === "production" ? "info" : "debug",
   format: winston.format.combine(
     winston.format.timestamp({
-      format: formatTimestamp
+      format: formatTimestamp,
     }),
     winston.format.errors({ stack: true }),
     winston.format.splat(),
     // winston.format.json()
-    winston.format.printf(({ timestamp, level, message, ...rest }) => {
-      return `${timestamp} [${level}] ${message} ${JSON.stringify(rest)}`;
+    winston.format.printf(({ level, message, stack }) => {
+      let formattedMessage = `[${level}] ${message}`;
+      if (stack) {
+        formattedMessage += `\n${stack}`; // Properly append the stack trace with a newline
+      }
+      return formattedMessage;
+
     })
   ),
   defaultMeta: { service: "TMS-backend" },
@@ -85,7 +61,7 @@ const logger = winston.createLogger({
     new winston.transports.Console({
       format: winston.format.combine(
         winston.format.colorize(),
-        winston.format.simple()
+        winston.format.errors({ stack: true }),
       ),
     }),
     new WinstonDailyRotateFile({
@@ -98,7 +74,7 @@ const logger = winston.createLogger({
       level: 'audit',
       datePattern: 'YYYY-MM-DD',
       maxFiles: '30d',  // Retain logs for 30 days
-    })
+    }),
   ],
 });
 winston.addColors(logLevels.colors);
