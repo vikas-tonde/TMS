@@ -1402,6 +1402,7 @@ export {
   bulkUsersFromFile,
   getTrainingDetails,
   getTrainingsOfUser,
+  removeUserFromBatch,
   getAssessmentDetails,
   removeTrainingOfUser,
   addBulkTestDataofUsers,
