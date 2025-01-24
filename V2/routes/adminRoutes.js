@@ -1,6 +1,6 @@
 import express from "express";
 import { validateAddSingleAssessmentDetails, validateAddTraining, validateExistingUserInBatch, validateIncomingBulkTest, validateIncomingBulkUsers, validateUser } from "../../validations/AdminRouteValidations.js";
-import { addBatchForExistingUser, addBulkTestDataofUsers, addLocation, addModules, addRemark, addSingleAssessmentDetails, addTraining, addUser, allUsers, assignTraining, bulkUsersFromFile, deleteAssessment, deleteBatch, deleteLocation, deleteModules, deleteTraining, deleteUser, deleteUsers, getAllBatches, getAllBatchesIncludingInactive, getAllModules, getAllRoles, getAllTrainees, getAllTraineesByLocationsAndNotInBatch, getAllTrainings, getAssessmentDetails, getAssessmentScoresForTraineeByBatch, getAssessmentsDetailsForSpecificBatch, getAssessmentsForSpecificBatch, getBatch, getLocations, getTraineeDetails, getTrainingDetails, getUserDetails, resetPassword, setBatchInactive, setUserInactive, updateTraining, updateUserDetails } from "../controllers/AdminController.js";
+import { addBatchForExistingUser, addBulkTestDataofUsers, addLocation, addModules, addRemark, addSingleAssessmentDetails, addTraining, addUser, allUsers, assignTraining, bulkUsersFromFile, deleteAssessment, deleteBatch, deleteLocation, deleteModules, deleteTraining, deleteUser, deleteUsers, getAllBatches, getAllBatchesIncludingInactive, getAllModules, getAllRoles, getAllTrainees, getAllTraineesByLocationsAndNotInBatch, getAllTrainings, getAssessmentDetails, getAssessmentScoresForTraineeByBatch, getAssessmentsDetailsForSpecificBatch, getAssessmentsForSpecificBatch, getBatch, getBatchesOfUser, getLocations, getTraineeDetails, getTrainingDetails, getTrainingsOfUser, getUserDetails, resetPassword, setBatchInactive, setUserInactive, updateTraining, updateUserDetails } from "../controllers/AdminController.js";
 import { adminAuthMiddleware } from "../middlewares/adminAuthMiddleware.js";
 import { authMiddleware } from "../middlewares/authMiddleware.js";
 import { upload } from "../middlewares/multerMiddleware.js";
@@ -38,6 +38,8 @@ adminRouterV2.get("/users/trainees/:batchId/:location", getAllTraineesByLocation
 adminRouterV2.get("/locations", getLocations);
 adminRouterV2.get("/trainings/all", getAllTrainings);
 adminRouterV2.get("/training/:trainingId", getTrainingDetails);
+adminRouterV2.get("/user/training/:employeeId", getTrainingsOfUser);
+adminRouterV2.get("/user/bacthes/:employeeId", getBatchesOfUser);
 
 /**
  * APIs for graph

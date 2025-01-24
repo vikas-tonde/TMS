@@ -1247,6 +1247,32 @@ const updateTraining = async (req, res) => {
   }
 };
 
+const removeTrainingOfUser = async (req, res) => {
+  try {
+    let { userId } = req.params;
+    let { userTrainingId } = req.body;
+    let user = await prisma.user.findUnique({
+      where: { id: BigInt(userId) },
+      select: { id: true }
+    });
+    if (!user) {
+      return res.status(404).json(new ApiResponse(404, {}, "User not found."));
+    }
+    let userTraining = await prisma.userTraining.findFirst({
+      where: { userId: user.id, id: BigInt(userTrainingId) },
+      include: { training: true }
+    });
+    if (!userTraining) {
+      return res.status(404).json(new ApiResponse(404, {}, "User training not found."));
+    }
+    await prisma.userTraining.delete({ where: { id: BigInt(userTrainingId) } });
+    logger.audit(`Training: ${userTraining.training.trainingName} removed from user ${user.employeeId} by ${req.user.firstName} ${req.user.lastName} (${req.user.employeeId})`);
+    return res.status(200).json(new ApiResponse(200, {}, `Training: ${userTraining.training.trainingName} removed from user ${user.employeeId} successfully.`));
+  } catch (error) {
+    logger.error(error);
+    return res.status(500).json(new ApiResponse(500, {}, "Something went wrong while removing training from user."));
+  }
+}
 
 const getTrainingDetails = async (req, res) => {
   try {
@@ -1264,6 +1290,54 @@ const getTrainingDetails = async (req, res) => {
   } catch (error) {
     logger.error(error);
     return res.status(500).json(new ApiResponse(500, {}, "Something went wrong while fetching training details."));
+  }
+}
+
+const getTrainingsOfUser = async (req, res) => {
+  try {
+    let { employeeId } = req.params;
+    let user = await prisma.user.findUnique({
+      where: { employeeId: String(employeeId) },
+      select: { id: true }
+    });
+    if (!user) {
+      return res.status(404).json(new ApiResponse(404, {}, "User not found."));
+    }
+    let trainings = await prisma.userTraining.findMany({
+      where: { userId: user.id },
+      include: { training: true }
+    });
+    if (trainings.length) {
+      return res.status(200).json(new ApiResponse(200, trainings));
+    }
+    return res.status(200).json(new ApiResponse(200, {}, "No training found."));
+  } catch (error) {
+    logger.error(error);
+    return res.status(500).json(new ApiResponse(500, {}, "Something went wrong while fetching trainings."));
+  }
+}
+
+const getBatchesOfUser = async (req, res) => {
+  try {
+    let { employeeId } = req.params;
+    let user = await prisma.user.findUnique({
+      where: { employeeId: String(employeeId) },
+      select: { id: true }
+    });
+    if (!user) {
+      return res.status(404).json(new ApiResponse(404, {}, "User not found."));
+    }
+    let batches = await prisma.userBatch.findMany({
+      where: { userId: user.id },
+      include: { batch: true }
+    });
+    if (batches.length) {
+      return res.status(200).json(new ApiResponse(200, batches));
+    }
+    return res.status(200).json(new ApiResponse(200, {}, "No batch found."));
+  } catch (error) {
+    logger.error(error);
+    return res.status(500).json(new ApiResponse(500, {}, "Something went wrong while fetching batches."));
   }
 }
 
@@ -1294,10 +1368,12 @@ export {
   getAllTrainings,
   setBatchInactive,
   deleteAssessment,
+  getBatchesOfUser,
   getTraineeDetails,
   updateUserDetails,
   bulkUsersFromFile,
   getTrainingDetails,
+  getTrainingsOfUser,
   getAssessmentDetails,
   addBulkTestDataofUsers,
   addBatchForExistingUser,
