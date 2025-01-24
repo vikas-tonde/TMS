@@ -264,6 +264,7 @@ const getTraineeDetails = async (req, res) => {
           lastName: true,
           id: true,
           remarks: true,
+          joinedAt: true,
           assessments: {
             include: {
               assessment: {
