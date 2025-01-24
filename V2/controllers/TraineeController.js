@@ -3,14 +3,14 @@ import { ApiResponse } from "../../utils/ApiResponse.js";
 
 const getExams = async (req, res) => {
   try {
-    let { batchId } = req.body;
+    let { batchId } = req.params;
     let query = {};
     if (batchId) {
       let batch = await prisma.batch.findUnique({ where: { id: BigInt(batchId) } });
       if (!batch) {
         return res.status(400).json(new ApiResponse(400, {}, "Batch id does not exist in system."));
       }
-      query = { batches: { some: { id: batchId } } };
+      query = { batches: { every: { id: batchId } } };
     }
     query = { ...query, users: { some: { userId: req.user.id } } };
     let examDetails = await prisma.assessment.findMany({
