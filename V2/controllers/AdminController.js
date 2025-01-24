@@ -574,8 +574,8 @@ const setUserInactive = async (req, res) => {
         });
         return count;
       });
-      logger.audit(`${userIds.join(",")} user(s) have been set to ${isActive ? "Active" : "Inactive"}.`);
-      return res.status(200).json(new ApiResponse(200, {}, `${userIds.join(",")} user(s) have been set to ${isActive ? "Active" : "Inactive"}.`));
+      logger.audit(`[${userIds.join(",")}] user(s) have been set to ${isActive ? "Active" : "Inactive"}.`);
+      return res.status(200).json(new ApiResponse(200, {}, `[${userIds.join(",")}] user(s) have been set to ${isActive ? "Active" : "Inactive"}.`));
     } catch (error) {
       logger.error(error);
       return res.status(500).json(new ApiResponse(500, {}, "Something went wrong while setting user inactive."));
@@ -598,8 +598,8 @@ const setBatchInactive = async (req, res) => {
           data: { isActive: isActive || false }
         });
       });
-      logger.audit(`Batch: ${batch.batchName} have been set to ${isActive ? "Active" : "Inactive"} by user ${req.user.firstName} ${req.user.lastName} (${req.user.employeeId}).`);
-      return res.status(200).json(new ApiResponse(200, {}, `Batch: ${batch.batchName} have been set to ${isActive ? "Active" : "Inactive"}.`));
+      logger.audit(`Batch: [${batch.batchName}] have been set to ${isActive ? "Active" : "Inactive"} by user ${req.user.firstName} ${req.user.lastName} (${req.user.employeeId}).`);
+      return res.status(200).json(new ApiResponse(200, {}, `Batch: [${batch.batchName}] have been set to ${isActive ? "Active" : "Inactive"}.`));
     } catch (error) {
       logger.error(error);
       return res.status(500).json(new ApiResponse(500, {}, "Something went wrong while setting batch inactive."));
@@ -973,8 +973,8 @@ const addBatchForExistingUser = async (req, res) => {
     let result = await prisma.$transaction(async (tx) => {
       return await tx.userBatch.create({ data: { userId: user.id, batchId: batch.id } });
     });
-    logger.audit(`User ${user.employeeId} added into batch ${batch.batchName} successfully.`)
-    return res.status(200).json(new ApiResponse(200, {}, `User ${user.employeeId} added into batch ${batch.batchName} successfully.`));
+    logger.audit(`User [${user.employeeId}] added into batch [${batch.batchName}] successfully.`)
+    return res.status(200).json(new ApiResponse(200, {}, `User [${user.employeeId}] added into batch [${batch.batchName}] successfully.`));
   } catch (error) {
     logger.error(error);
     return res.status(500).json(new ApiResponse(500, {}, "Something went wrong while adding user in batch."));
@@ -1149,8 +1149,8 @@ const addTraining = async (req, res) => {
         modules: { create: foundModules.map(module => ({ moduleId: module.id })) }
       }
     });
-    logger.info(`Training ${training.trainingName} added by ${req.user.firstName} ${req.user.lastName} (${req.user.employeeId}).`);
-    return res.status(200).json(new ApiResponse(200, training, `Training ${training.trainingName} added successfully.`));
+    logger.info(`Training: [${training.trainingName}] added by ${req.user.firstName} ${req.user.lastName} (${req.user.employeeId}).`);
+    return res.status(200).json(new ApiResponse(200, training, `Training: [${training.trainingName}] added successfully.`));
   } catch (error) {
     logger.error(error);
     return res.status(500).json(new ApiResponse(500, {}, "Something went wrong while adding new training."));
@@ -1190,7 +1190,7 @@ const assignTraining = async (req, res) => {
       }
     });
     let result = await prisma.userTraining.createMany({ data: dataToInsert });
-    logger.audit(`${userIds.join(",")} are assigned with training ${training.trainingName} by ${req.user.firstName} ${req.user.lastName} (${req.user.employeeId})`);
+    logger.audit(`[${userIds.join(",")}] are assigned with training [${training.trainingName}] by ${req.user.firstName} ${req.user.lastName} (${req.user.employeeId})`);
     return res.status(200).json(new ApiResponse(200, result, "Training assigned successfully."));
   } catch (error) {
     logger.error(error);
@@ -1241,8 +1241,8 @@ const updateTraining = async (req, res) => {
       return updatedTraining;
     });
 
-    logger.audit(`Training: ${training.trainingName} updated by ${req.user.firstName} ${req.user.lastName} (${req.user.employeeId}).`);
-    return res.status(200).json(new ApiResponse(200, updatedTraining, `Training: ${training.trainingName} updated successfully.`));
+    logger.audit(`Training: [${training.trainingName}] updated by ${req.user.firstName} ${req.user.lastName} (${req.user.employeeId}).`);
+    return res.status(200).json(new ApiResponse(200, updatedTraining, `Training: [${training.trainingName}] updated successfully.`));
   } catch (error) {
     logger.error(error);
     return res.status(500).json(new ApiResponse(500, {}, "Something went wrong while updating training."));
