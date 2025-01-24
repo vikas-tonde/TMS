@@ -1200,37 +1200,66 @@ const assignTraining = async (req, res) => {
 const updateTraining = async (req, res) => {
   let { trainingId } = req.params;
   let { trainingName, duration, modules } = req.body;
+
   try {
-    let training = await prisma.training.findUnique({ where: { id: BigInt(trainingId) } });
+    // Fetch the training details
+    let training = await prisma.training.findUnique({
+      where: { id: BigInt(trainingId) },
+      include: { modules: true } // Include the current modules in the training
+    });
+
     if (!training) {
       return res.status(400).json(new ApiResponse(400, {}, `Training with id [${trainingId}] does not exist in system.`));
     }
+
+    // Fetch the modules that are part of the training
     let foundModules = await prisma.module.findMany({
       where: { moduleName: { in: modules } },
       select: { id: true }
     });
-    let updatedTraining = await prisma.training.update({
-      where: { id: BigInt(trainingId) },
-      data: {
-        trainingName, duration: parseInt(duration),
-        modules: { set: foundModules.map(module => ({ moduleId: module.id })) }
-      }
+
+    // Get the current modules of the training
+    let currentModuleIds = training.modules.map(module => module.moduleId);
+
+    // Get the new module IDs that are being passed in
+    let newModuleIds = foundModules.map(module => module.id);
+
+    // Determine modules to remove (existing but not in new set)
+    let modulesToRemove = currentModuleIds.filter(id => !newModuleIds.includes(id));
+
+    // Determine modules to add (new ones that are not in current set)
+    let modulesToAdd = newModuleIds.filter(id => !currentModuleIds.includes(id));
+    let updatedTraining = await prisma.$transaction(async tx => {
+      let updatedTraining = await tx.training.update({
+        where: { id: BigInt(trainingId) },
+        data: {
+          trainingName, duration: parseInt(duration),
+          modules: {
+            deleteMany: { moduleId: { in: modulesToRemove } },
+            create: modulesToAdd.map(moduleId => ({ moduleId: moduleId }))
+          }
+        },
+        include: { modules: true }
+      });
+      return updatedTraining;
     });
+
     logger.audit(`Training: ${training.trainingName} updated by ${req.user.firstName} ${req.user.lastName} (${req.user.employeeId}).`);
     return res.status(200).json(new ApiResponse(200, updatedTraining, `Training: ${training.trainingName} updated successfully.`));
   } catch (error) {
     logger.error(error);
     return res.status(500).json(new ApiResponse(500, {}, "Something went wrong while updating training."));
-    
   }
-}
+};
+
 
 const getTrainingDetails = async (req, res) => {
   try {
     let { trainingId } = req.params;
     let training = await prisma.training.findUnique({
       where: { id: BigInt(trainingId) },
-      include: { modules: { select: { module: true } }
+      include: {
+        modules: { select: { module: true } }
       }
     });
     if (training) {
