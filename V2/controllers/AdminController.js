@@ -1375,6 +1375,7 @@ export {
   getTrainingDetails,
   getTrainingsOfUser,
   getAssessmentDetails,
+  removeTrainingOfUser,
   addBulkTestDataofUsers,
   addBatchForExistingUser,
   addSingleAssessmentDetails,
