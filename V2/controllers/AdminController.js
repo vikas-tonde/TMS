@@ -493,7 +493,8 @@ const getAllTrainees = async (req, res) => {
         firstName: true,
         lastName: true,
         email: true,
-        isActive: true
+        isActive: true,
+        joinedAt: true,
       }
     });
     if (trainees.length) {
