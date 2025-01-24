@@ -1274,6 +1274,34 @@ const removeTrainingOfUser = async (req, res) => {
   }
 }
 
+const removeUserFromBatch = async (req, res) => {
+  try {
+    let { userId } = req.params;
+    let {batchId} = req.body;
+    let user = await prisma.user.findUnique({
+      where: { id: BigInt(userId) },
+      select: { id: true }
+    });
+    if (!user) {
+      return res.status(404).json(new ApiResponse(404, {}, "User not found."));
+    }
+    let userBatch = await prisma.userBatch.findFirst({
+      where: { userId: user.id, batchId: BigInt(batchId) },
+      include: { batch: true }
+    });
+    if (!userBatch) {
+      return res.status(404).json(new ApiResponse(404, {}, "User batch not found."));
+    }
+    await prisma.userBatch.delete({ where: { userId_batchId: { userId: user.id, batchId: BigInt(batchId) } }});
+    logger.audit(`User: ${user.employeeId} removed from batch ${userBatch.batch.batchName} by ${req.user.firstName} ${req.user.lastName} (${req.user.employeeId})`);
+    return res.status(200).json(new ApiResponse(200, {}, `User: ${user.employeeId} removed from batch ${userBatch.batch.batchName} successfully.`));
+  } catch (error) {
+    logger.error(error);
+    return res.status(500).json(new ApiResponse(500, {}, "Something went wrong while removing user from batch."));
+    
+  }
+}
+
 const getTrainingDetails = async (req, res) => {
   try {
     let { trainingId } = req.params;
