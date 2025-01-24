@@ -1205,7 +1205,7 @@ const updateTraining = async (req, res) => {
     // Fetch the training details
     let training = await prisma.training.findUnique({
       where: { id: BigInt(trainingId) },
-      include: { modules: true } // Include the current modules in the training
+      include: { modules: true }
     });
 
     if (!training) {
@@ -1218,16 +1218,12 @@ const updateTraining = async (req, res) => {
       select: { id: true }
     });
 
-    // Get the current modules of the training
     let currentModuleIds = training.modules.map(module => module.moduleId);
 
-    // Get the new module IDs that are being passed in
     let newModuleIds = foundModules.map(module => module.id);
 
-    // Determine modules to remove (existing but not in new set)
     let modulesToRemove = currentModuleIds.filter(id => !newModuleIds.includes(id));
 
-    // Determine modules to add (new ones that are not in current set)
     let modulesToAdd = newModuleIds.filter(id => !currentModuleIds.includes(id));
     let updatedTraining = await prisma.$transaction(async tx => {
       let updatedTraining = await tx.training.update({
