@@ -176,13 +176,11 @@ const addBulkTestDataofUsers = async (req, res, next) => {
           });
           users.push({ userId: user.id, marksObtained: object.marks })
         }
-        let stringDate = req.body.date;
-        let dateArray = stringDate.split("-");
-        let date = new Date(Date.UTC(parseInt(dateArray[2]), parseInt(dateArray[0]) - 1, parseInt(dateArray[1])));
+        let date = new Date(req.body.date);
         const assessment = await tx.assessment.create({
           data: {
             assessmentName: req.body.assessmentName,
-            date: date,
+            date: new Date(date.toISOString()),
             totalMarks: parseInt(req.body.totalMarks),
             assessmentType: req.body.assessmentType,
             module: { connect: { id: module.id } },
