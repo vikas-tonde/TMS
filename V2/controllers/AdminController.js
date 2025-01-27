@@ -328,7 +328,7 @@ const getUserDetails = async (req, res) => {
             select: {
               batch: {
                 select: {
-                  id: true, 
+                  id: true,
                   batchName: true,
                 }
               }
@@ -1014,7 +1014,7 @@ const resetPassword = async (req, res) => {
 const updateUserDetails = async (req, res) => {
   try {
     let { employeeId } = req.params;
-    let { firstName, lastName, isActive, location, role, email } = req.body;
+    let { firstName, lastName, isActive, location, role, email, batchIds, trainingIds } = req.body;
     let user = await prisma.user.findUnique({
       where: { employeeId: String(employeeId) },
       include: { location: true, role: true }
@@ -1057,11 +1057,57 @@ const updateUserDetails = async (req, res) => {
     if (Object.keys(newUser).length === 0) {
       return res.status(200).json(new ApiResponse(200, {}, "No changes needed."));
     }
+
+    if (batchIds && batchIds.length > 0) {
+      let batches = await prisma.batch.findMany({ where: { id: { in: batchIds } } });
+      if (batches.length != batchIds.length) {
+        return res.status(400).json(new ApiResponse(400, {}, "One or more batch ids are invalid."));
+      }
+    }
+
+    if (trainingIds && trainingIds.length > 0) {
+      let trainings = await prisma.training.findMany({ where: { id: { in: trainingIds } } });
+      if (trainings.length != trainingIds.length) {
+        return res.status(400).json(new ApiResponse(400, {}, "One or more training ids are invalid."));
+      }
+    }
     let savedUser = await prisma.$transaction(async tx => {
+      let userBatches = await prisma.userBatch.findMany({ where: { userId: user.id } });
+      let existingBatchIds = userBatches.map(batch => batch.batchId);
+      let newBatches = batchIds?.filter(batchId => !existingBatchIds.includes(batchId)) || [];
+      let removedBatches = existingBatchIds.filter(batchId => !batchIds?.includes(batchId)) || [];
+      if (newBatches.length) {
+        await prisma.userBatch.createMany({
+          data: newBatches.map(batchId => { return { userId: user.id, batchId: batchId } })
+        });
+      }
+
+      if (removedBatches.length) {
+        await prisma.userBatch.deleteMany({
+          where: { userId: user.id, batchId: { in: removedBatches } }
+        });
+      }
+
+      let userTrainings = await prisma.userTraining.findMany({ where: { userId: user.id } });
+      let existingTrainingIds = userTrainings.map(training => training.trainingId);
+      let newTrainings = trainingIds?.filter(trainingId => !existingTrainingIds.includes(trainingId)) || [];
+      let removedTrainings = existingTrainingIds.filter(trainingId => !trainingIds?.includes(trainingId)) || [];
+      if (newTrainings.length) {
+        await prisma.userTraining.createMany({
+          data: newTrainings.map(trainingId => { return { userId: user.id, trainingId: trainingId } })
+        });
+        logger.audit(`User: ${user.employeeId} added to training(s): ${newTrainings.join(", ")}`);
+      }
+      if (removedTrainings.length) {
+        await prisma.userTraining.deleteMany({
+          where: { userId: user.id, trainingId: { in: removedTrainings } }
+        });
+        logger.audit(`User: ${user.employeeId} removed from training(s): ${removedTrainings.join(", ")}`);
+      }
       return await tx.user.update({
         where: { employeeId: String(employeeId) },
         data: newUser
-      });
+      })
     });
     if (savedUser) {
       logger.info(`User details of ${savedUser.employeeId} updated successfully.`);
