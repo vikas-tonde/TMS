@@ -328,6 +328,7 @@ const getUserDetails = async (req, res) => {
             select: {
               batch: {
                 select: {
+                  id: true, 
                   batchName: true,
                 }
               }
@@ -337,6 +338,7 @@ const getUserDetails = async (req, res) => {
             select: {
               training: {
                 select: {
+                  id: true,
                   trainingName: true,
                 }
               }
