@@ -1,6 +1,6 @@
 import express from "express";
 import { validateAddSingleAssessmentDetails, validateAddTraining, validateExistingUserInBatch, validateIncomingBulkTest, validateIncomingBulkUsers, validateUser } from "../../validations/AdminRouteValidations.js";
-import { addBatchForExistingUser, addBulkTestDataofUsers, addLocation, addModules, addRemark, addSingleAssessmentDetails, addTraining, addUser, allUsers, assignTraining, bulkUsersFromFile, deleteAssessment, deleteBatch, deleteLocation, deleteModules, deleteTraining, deleteUser, deleteUsers, getAllBatches, getAllBatchesIncludingInactive, getAllModules, getAllRoles, getAllTrainees, getAllTraineesByLocationsAndNotInBatch, getAllTrainings, getAssessmentDetails, getAssessmentScoresForTraineeByBatch, getAssessmentsDetailsForSpecificBatch, getAssessmentsForSpecificBatch, getBatch, getBatchesOfUser, getLocations, getTraineeDetails, getTrainingDetails, getTrainingsOfUser, getUserDetails, removeTrainingOfUser, removeUserFromBatch, resetPassword, setBatchInactive, setUserInactive, updateTraining, updateUserDetails } from "../controllers/AdminController.js";
+import { addBatchForExistingUser, addBulkTestDataofUsers, addLocation, addModules, addRemark, addSingleAssessmentDetails, addTraining, addUser, allUsers, assignTraining, bulkUsersFromFile, deleteAssessment, deleteBatch, deleteLocation, deleteModules, deleteTraining, deleteUser, deleteUsers, getAllBatches, getAllBatchesIncludingInactive, getAllModules, getAllRoles, getAllTrainees, getAllTraineesByLocationsAndNotInBatch, getAllTrainings, getAssessmentDetails, getAssessmentScoresForTraineeByBatch, getAssessmentsDetailsForSpecificBatch, getAssessmentsForSpecificBatch, getBatch, getBatchesOfUser, getLocations, getTraineeDetails, getTrainingDetails, getTrainingsOfUser, getUserDetails, removeTrainingOfUser, removeUserFromBatch, resetPassword, setBatchInactive, toggleUserIsActive, updateTraining, updateUserDetails } from "../controllers/AdminController.js";
 import { adminAuthMiddleware } from "../middlewares/adminAuthMiddleware.js";
 import { authMiddleware } from "../middlewares/authMiddleware.js";
 import { upload } from "../middlewares/multerMiddleware.js";
@@ -56,7 +56,7 @@ adminRouterV2.post("/training/add", validateAddTraining, addTraining);
 adminRouterV2.post("/modules/delete", deleteModules);
 adminRouterV2.post("/users/delete", deleteUsers);
 
-adminRouterV2.put('/users/toggle-active', setUserInactive);
+adminRouterV2.put('/users/toggle-active', toggleUserIsActive);
 adminRouterV2.put('/batch/toggle-active', setBatchInactive);
 adminRouterV2.put('/users/user/remark', addRemark);
 adminRouterV2.put('/users/user/add/batch', validateExistingUserInBatch, addBatchForExistingUser);

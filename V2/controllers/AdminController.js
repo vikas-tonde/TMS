@@ -560,18 +560,26 @@ const addUser = async (req, res) => {
   }
 }
 
-const setUserInactive = async (req, res) => {
+const toggleUserIsActive = async (req, res) => {
   let { userIds, isActive } = req.body;
   if (userIds?.length > 0) {
     try {
-      let count = await prisma.$transaction(async tx => {
+      let data = {}
+      if (isActive === true) {
+        data = {
+          joinedAt: new Date(Date.now()),
+          isActive: true
+        }
+      }
+      else {
+        data = { isActive: false, joinedAt: null };
+      }
+      await prisma.$transaction(async tx => {
         let { count } = await tx.user.updateMany({
           where: {
             employeeId: { in: userIds }
           },
-          data: {
-            isActive: isActive || false
-          }
+          data: data
         });
         return count;
       });
@@ -1280,7 +1288,7 @@ const removeTrainingOfUser = async (req, res) => {
 const removeUserFromBatch = async (req, res) => {
   try {
     let { userId } = req.params;
-    let {batchId} = req.body;
+    let { batchId } = req.body;
     let user = await prisma.user.findUnique({
       where: { id: BigInt(userId) },
       select: { id: true }
@@ -1295,13 +1303,13 @@ const removeUserFromBatch = async (req, res) => {
     if (!userBatch) {
       return res.status(404).json(new ApiResponse(404, {}, "User batch not found."));
     }
-    await prisma.userBatch.delete({ where: { userId_batchId: { userId: user.id, batchId: BigInt(batchId) } }});
+    await prisma.userBatch.delete({ where: { userId_batchId: { userId: user.id, batchId: BigInt(batchId) } } });
     logger.audit(`User: ${user.employeeId} removed from batch ${userBatch.batch.batchName} by ${req.user.firstName} ${req.user.lastName} (${req.user.employeeId})`);
     return res.status(200).json(new ApiResponse(200, {}, `User: ${user.employeeId} removed from batch ${userBatch.batch.batchName} successfully.`));
   } catch (error) {
     logger.error(error);
     return res.status(500).json(new ApiResponse(500, {}, "Something went wrong while removing user from batch."));
-    
+
   }
 }
 
@@ -1395,7 +1403,6 @@ export {
   getAllTrainees,
   updateTraining,
   getUserDetails,
-  setUserInactive,
   getAllTrainings,
   setBatchInactive,
   deleteAssessment,
@@ -1403,6 +1410,7 @@ export {
   getTraineeDetails,
   updateUserDetails,
   bulkUsersFromFile,
+  toggleUserIsActive,
   getTrainingDetails,
   getTrainingsOfUser,
   removeUserFromBatch,
