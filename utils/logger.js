@@ -47,8 +47,8 @@ const logger = winston.createLogger({
     winston.format.errors({ stack: true }),
     winston.format.splat(),
     // winston.format.json()
-    winston.format.printf(({ level, message, stack }) => {
-      let formattedMessage = `[${level}] ${message}`;
+    winston.format.printf(({ level, message, stack, ...rest }) => {
+      let formattedMessage = `[${level}] ${message} ${JSON.stringify(rest)}`;
       if (stack) {
         formattedMessage += `\n${stack}`; // Properly append the stack trace with a newline
       }

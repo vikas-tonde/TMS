@@ -1015,6 +1015,10 @@ const updateUserDetails = async (req, res) => {
   try {
     let { employeeId } = req.params;
     let { firstName, lastName, isActive, location, role, email, batchIds, trainingIds } = req.body;
+    
+    batchIds = batchIds?.map(batchId => BigInt(batchId));
+    trainingIds = trainingIds?.map(trainingId => BigInt(trainingId));
+
     let user = await prisma.user.findUnique({
       where: { employeeId: String(employeeId) },
       include: { location: true, role: true }
@@ -1072,34 +1076,36 @@ const updateUserDetails = async (req, res) => {
       }
     }
     let savedUser = await prisma.$transaction(async tx => {
-      let userBatches = await prisma.userBatch.findMany({ where: { userId: user.id } });
+      let userBatches = await tx.userBatch.findMany({ where: { userId: user.id } });
       let existingBatchIds = userBatches.map(batch => batch.batchId);
-      let newBatches = batchIds?.filter(batchId => !existingBatchIds.includes(batchId)) || [];
-      let removedBatches = existingBatchIds.filter(batchId => !batchIds?.includes(batchId)) || [];
+      let newBatches = batchIds?.filter(batchId => !existingBatchIds?.includes(batchId)) || [];
+      let removedBatches = existingBatchIds?.filter(batchId => !batchIds?.includes(batchId)) || [];
+
       if (newBatches.length) {
-        await prisma.userBatch.createMany({
+        await tx.userBatch.createMany({
           data: newBatches.map(batchId => { return { userId: user.id, batchId: batchId } })
         });
       }
 
       if (removedBatches.length) {
-        await prisma.userBatch.deleteMany({
+        await tx.userBatch.deleteMany({
           where: { userId: user.id, batchId: { in: removedBatches } }
         });
       }
 
-      let userTrainings = await prisma.userTraining.findMany({ where: { userId: user.id } });
+      let userTrainings = await tx.userTraining.findMany({ where: { userId: user.id } });
       let existingTrainingIds = userTrainings.map(training => training.trainingId);
-      let newTrainings = trainingIds?.filter(trainingId => !existingTrainingIds.includes(trainingId)) || [];
-      let removedTrainings = existingTrainingIds.filter(trainingId => !trainingIds?.includes(trainingId)) || [];
+      let newTrainings = trainingIds?.filter(trainingId => !existingTrainingIds?.includes(trainingId)) || [];
+      let removedTrainings = existingTrainingIds?.filter(trainingId => !trainingIds?.includes(trainingId)) || [];
+      
       if (newTrainings.length) {
-        await prisma.userTraining.createMany({
+        await tx.userTraining.createMany({
           data: newTrainings.map(trainingId => { return { userId: user.id, trainingId: trainingId } })
         });
         logger.audit(`User: ${user.employeeId} added to training(s): ${newTrainings.join(", ")}`);
       }
       if (removedTrainings.length) {
-        await prisma.userTraining.deleteMany({
+        await tx.userTraining.deleteMany({
           where: { userId: user.id, trainingId: { in: removedTrainings } }
         });
         logger.audit(`User: ${user.employeeId} removed from training(s): ${removedTrainings.join(", ")}`);
@@ -1107,8 +1113,9 @@ const updateUserDetails = async (req, res) => {
       return await tx.user.update({
         where: { employeeId: String(employeeId) },
         data: newUser
-      })
+      });
     });
+    
     if (savedUser) {
       logger.info(`User details of ${savedUser.employeeId} updated successfully.`);
       return res.status(200).json(new ApiResponse(200, savedUser, `User details of ${savedUser.employeeId} updated successfully.`));
