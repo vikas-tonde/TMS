@@ -265,6 +265,19 @@ const getTraineeDetails = async (req, res) => {
           id: true,
           remarks: true,
           joinedAt: true,
+          trainings: {
+            select: {
+              assignedDate: true,
+              isCompleted: true,
+              training: {
+                select: {
+                  id: true,
+                  trainingName: true,
+                  duration: true,
+                }
+              }
+            }
+          },
           assessments: {
             include: {
               assessment: {
