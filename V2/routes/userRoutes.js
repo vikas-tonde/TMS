@@ -20,6 +20,6 @@ userRouterv2.put("/profile/image", imageUpload.single('file'), addProfileImage);
 
 /** Admin only user route */
 userRouterv2.use(adminAuthMiddleware);
-userRouterv2.put("/user/admin/app-password", addAppPassword);
+userRouterv2.put("/admin/app-password", addAppPassword);
 
 export default userRouterv2;

@@ -67,4 +67,10 @@ export async function mailHandler(user, to, subject, text) {
   await mailer.sendMail(to, subject, text);
 }
 
+export async function verifyPassword(user, password) {
+  let mailer = new Mailer(user);
+  mailer.user.appPassword = password;
+  mailer.createTransporter();
+  return await mailer.verify();
+}
 export default Mailer;

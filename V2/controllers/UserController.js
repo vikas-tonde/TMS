@@ -6,6 +6,7 @@ import prisma from '../../DB/db.config.js';
 import { ApiResponse } from "../../utils/ApiResponse.js";
 import logger from "../../utils/logger.js";
 import { encrypt } from "../../utils/encrypt.js";
+import { verifyPassword } from "../../utils/mailer.js";
 
 const isPasswordCorrect = async function (password, originalPassword) {
   return await bcrypt.compare(password, originalPassword);
@@ -213,13 +214,18 @@ const getProfileImage = (req, res) => {
 
 
 const addAppPassword = async (req, res) => {
-  let { employeeId, appPassword } = req.body;
+  let { appPassword } = req.body;
+  let employeeId = req.user.employeeId;
   if (!employeeId || !appPassword) {
     logger.debug("Employee Id or app password is empty.");
     return res.status(400).json(new ApiResponse(400, {}, "Employee Id or app password is empty."));
   }
   try {
     let encryptedPassword = encrypt(appPassword, employeeId);
+    if(!(await verifyPassword(req.user, encryptedPassword))){
+      logger.debug("App password verification failed.");
+      return res.status(400).json(new ApiResponse(400, {}, "App password verification failed, please check your app password once."));
+    }
     let user = await prisma.user.update({
       where: { employeeId },
       data: { appPassword: encryptedPassword }
