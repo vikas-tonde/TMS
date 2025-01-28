@@ -5,6 +5,7 @@ import path from 'path';
 import prisma from '../../DB/db.config.js';
 import { ApiResponse } from "../../utils/ApiResponse.js";
 import logger from "../../utils/logger.js";
+import { encrypt } from "../../utils/encrypt.js";
 
 const isPasswordCorrect = async function (password, originalPassword) {
   return await bcrypt.compare(password, originalPassword);
@@ -211,9 +212,33 @@ const getProfileImage = (req, res) => {
 };
 
 
+const addAppPassword = async (req, res) => {
+  let { employeeId, appPassword } = req.body;
+  if (!employeeId || !appPassword) {
+    logger.debug("Employee Id or app password is empty.");
+    return res.status(400).json(new ApiResponse(400, {}, "Employee Id or app password is empty."));
+  }
+  try {
+    let encryptedPassword = encrypt(appPassword, employeeId);
+    let user = await prisma.user.update({
+      where: { employeeId },
+      data: { appPassword: encryptedPassword }
+    });
+    if (user) {
+      logger.audit(`App password added successfully for ${user.firstName} ${user.lastName}`);
+      return res.status(200).json(new ApiResponse(200, { user }, `App password added successfully for ${user.firstName} ${user.lastName}`));
+    }
+    return res.status(500).json(new ApiResponse(500, {}, "App password adding failed."));
+  } catch (error) {
+    logger.error(error);
+    return res.status(500).json(new ApiResponse(500, {}, "Something went wrong while adding app password."));
+  }
+}
+
 
 export {
   addProfileImage, chanegPassword,
-  downloadMarksheetSample, downloadTraineeSampleFile, getProfileImage, getSelf, loginUser, signOut
+  downloadMarksheetSample, downloadTraineeSampleFile, getProfileImage, getSelf,
+  loginUser, signOut, addAppPassword
 };
 

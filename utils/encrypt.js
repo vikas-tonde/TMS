@@ -28,9 +28,7 @@ export function decrypt(encryptedData) {
 
     const decipher = crypto.createDecipheriv(algorithm, key, iv);
     let decrypted = decipher.update(encryptedText, 'hex', 'utf8');
-    decrypted += decipher.final('utf8');
-    console.log(decrypted);
-    
+    decrypted += decipher.final('utf8');    
     return decrypted;
 }
 // Usage Example
