@@ -23,6 +23,7 @@ export const authMiddleware = async (req, res, next) => {
         email: true,
         employeeId: true,
         profileImage: true,
+        appPassword: true,
         role: {
           select: {
             name: true

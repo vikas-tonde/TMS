@@ -7,6 +7,7 @@ import { ApiResponse } from "../../utils/ApiResponse.js";
 import { Prisma } from '@prisma/client';
 import logger from '../../utils/logger.js';
 import { ROLES } from '../../utils/roles.js';
+import { mailHandler } from '../../utils/mailer.js';
 
 const readExcelFile = async (filePath, sheetName) => {
   return excelToJson({
@@ -375,7 +376,7 @@ const addRemark = async (req, res) => {
       return await tx.user.update({
         where: { employeeId: employeeId },
         data: {
-          remarks: { create: { value: remark, date: date } }
+          remarks: { create: { value: remark, date: date, adminId:req.user.id } }
         },
         include: {
           remarks: true,
@@ -395,6 +396,7 @@ const addRemark = async (req, res) => {
       logger.warn(`Employee not found with ${employeeId}`);
       return res.status(404).json(new ApiResponse(404, {}, `Employee not found with ${employeeId}`));
     }
+    mailHandler(req.user, foundUser.email, "New remark added", `Remark added for you by ${req.user.firstName} ${req.user.lastName} (${req.user.employeeId}).`);
     return res.status(200).json(new ApiResponse(200, foundUser));
   } catch (e) {
     logger.error(e);

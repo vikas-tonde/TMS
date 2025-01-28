@@ -32,6 +32,7 @@ model User {
   profileImage  String?
   locationId    Int
   joinedAt      DateTime?        @default(now())
+  appPassword   String?
   location      Location         @relation(fields: [locationId], references: [id], onDelete: Cascade)
   batches       UserBatch[]
   assessments   UserAssessment[]
