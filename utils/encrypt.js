@@ -31,17 +31,4 @@ export function decrypt(encryptedData) {
     decrypted += decipher.final('utf8');    
     return decrypted;
 }
-// Usage Example
-// const text = 'qcvjgtmgcsthlysd';
-// const password = 'T50496';
 
-// const encrypted = encrypt(text, password);
-// console.log('Encrypted:', encrypted);
-//  await prisma.user.update({
-//     where: { employeeId: 'T50496' },
-//     data: {
-//         appPassword: encrypted
-//     }
-// });
-// const decrypted = decrypt(encrypted, 'T50496');
-// console.log('Decrypted:', decrypted);
