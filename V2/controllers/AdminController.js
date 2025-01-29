@@ -1,13 +1,13 @@
+import { Prisma } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import excelToJson from "convert-excel-to-json";
 import { validationResult } from 'express-validator';
 import * as fs from 'fs-extra';
 import prisma from '../../DB/db.config.js';
 import { ApiResponse } from "../../utils/ApiResponse.js";
-import { Prisma } from '@prisma/client';
 import logger from '../../utils/logger.js';
-import { ROLES } from '../../utils/roles.js';
 import { mailHandler } from '../../utils/mailer.js';
+import { ROLES } from '../../utils/roles.js';
 
 const readExcelFile = async (filePath, sheetName) => {
   return excelToJson({
@@ -1257,9 +1257,10 @@ const assignTraining = async (req, res) => {
       logger.warn("UserIds is empty.");
       return res.status(400).json(new ApiResponse(400, {}, "UserIds are empty."));
     }
+    userIds = userIds.map(id => BigInt(id));
     let presentInDb = await prisma.user.findMany({
-      where: { id: { in: userIds } },
-      select: { id: true }
+      where: { id: { in: userIds }, isActive: true },
+      select: { id: true, employeeId: true }
     });
     if (presentInDb.length !== userIds?.length) {
       let ids = presentInDb.map(user => user.id);
@@ -1267,6 +1268,18 @@ const assignTraining = async (req, res) => {
       logger.warn(`${absentIds.join(",")} are not present in system`);
       return res.status(400).json(new ApiResponse(400, {}, `${absentIds.join(",")} are not present in system`));
     }
+
+    let userTrainings = await prisma.userTraining.findMany({
+      where: { userId: { in: userIds }, trainingId: BigInt(trainingId) },
+      select: { userId: true }
+    });
+    let presentUserIds = userTrainings.map(user => user.userId);
+    if (presentUserIds.length) {
+      let alreadyAssignedTrainings = userIds.filter(id => !presentUserIds.includes(BigInt(id)));
+      logger.warn(`${alreadyAssignedTrainings.join(",")} are already assigned with training.`);
+      return res.status(400).json(new ApiResponse(400, {}, `Some users are already assigned with training :[${training.trainingName}], please select only those users who are not assigned with this training.`));
+    }
+
     let dataToInsert = userIds.map(id => {
       return {
         userId: BigInt(id),
@@ -1275,8 +1288,9 @@ const assignTraining = async (req, res) => {
       }
     });
     let result = await prisma.userTraining.createMany({ data: dataToInsert });
-    logger.audit(`[${userIds.join(",")}] are assigned with training [${training.trainingName}] by ${req.user.firstName} ${req.user.lastName} (${req.user.employeeId})`);
-    return res.status(200).json(new ApiResponse(200, result, "Training assigned successfully."));
+    let employeeIds = presentInDb.map(user => user.employeeId);
+    logger.audit(`[${employeeIds.join(", ")}] are assigned with training [${training.trainingName}] by ${req.user.firstName} ${req.user.lastName} (${req.user.employeeId})`);
+    return res.status(200).json(new ApiResponse(200, result, `Users: [${employeeIds.join(", ")}] are assigned with training: [${training.trainingName}].`));
   } catch (error) {
     logger.error(error);
     return res.status(500).json(new ApiResponse(500, {}, "Something went wrong while assigning training."));
@@ -1457,47 +1471,9 @@ const getBatchesOfUser = async (req, res) => {
 }
 
 export {
-  addUser,
-  getBatch,
-  allUsers,
-  addRemark,
-  addModules,
-  deleteUser,
-  deleteBatch,
-  addLocation,
-  addTraining,
-  deleteUsers,
-  getAllRoles,
-  getLocations,
-  getAllModules,
-  resetPassword,
-  getAllBatches,
-  deleteModules,
-  deleteTraining,
-  deleteLocation,
-  assignTraining,
-  getAllTrainees,
-  updateTraining,
-  getUserDetails,
-  getAllTrainings,
-  setBatchInactive,
-  deleteAssessment,
-  getBatchesOfUser,
-  getTraineeDetails,
-  updateUserDetails,
-  bulkUsersFromFile,
-  toggleUserIsActive,
-  getTrainingDetails,
-  getTrainingsOfUser,
-  removeUserFromBatch,
-  getAssessmentDetails,
-  removeTrainingOfUser,
-  addBulkTestDataofUsers,
-  addBatchForExistingUser,
-  addSingleAssessmentDetails,
-  getAllBatchesIncludingInactive,
-  getAssessmentsForSpecificBatch,
-  getAssessmentScoresForTraineeByBatch,
-  getAssessmentsDetailsForSpecificBatch,
-  getAllTraineesByLocationsAndNotInBatch,
+  addBatchForExistingUser, addBulkTestDataofUsers, addLocation, addModules, addRemark, addSingleAssessmentDetails, addTraining, addUser, allUsers, assignTraining, bulkUsersFromFile, deleteAssessment, deleteBatch, deleteLocation, deleteModules,
+  deleteTraining, deleteUser, deleteUsers, getAllBatches, getAllBatchesIncludingInactive, getAllModules, getAllRoles, getAllTrainees, getAllTraineesByLocationsAndNotInBatch, getAllTrainings, getAssessmentDetails, getAssessmentScoresForTraineeByBatch,
+  getAssessmentsDetailsForSpecificBatch, getAssessmentsForSpecificBatch, getBatch, getBatchesOfUser, getLocations, getTraineeDetails, getTrainingDetails,
+  getTrainingsOfUser, getUserDetails, removeTrainingOfUser, removeUserFromBatch, resetPassword, setBatchInactive, toggleUserIsActive, updateTraining, updateUserDetails
 };
+
