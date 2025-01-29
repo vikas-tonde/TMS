@@ -62,8 +62,8 @@ adminRouterV2.put('/users/user/remark', addRemark);
 adminRouterV2.put('/users/user/add/batch', validateExistingUserInBatch, addBatchForExistingUser);
 adminRouterV2.put("/user/:employeeId/reset-password", resetPassword);
 adminRouterV2.put("/user/:employeeId", updateUserDetails);
-adminRouterV2.put("/training/:trainingId", updateTraining);
 adminRouterV2.put("/training/assign", assignTraining);
+adminRouterV2.put("/training/:trainingId", updateTraining);
 adminRouterV2.put("/user/training/:userId", removeTrainingOfUser);
 adminRouterV2.put("/user/batche/:userId", removeUserFromBatch);
 
