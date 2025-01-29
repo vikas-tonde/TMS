@@ -1,6 +1,6 @@
 import express from "express";
 import { validateLogin } from "../../validations/UserValidation.js";
-import { addAppPassword, addProfileImage, chanegPassword, downloadMarksheetSample, downloadTraineeSampleFile, getProfileImage, getSelf, loginUser, signOut } from "../controllers/UserController.js";
+import { addAppPassword, addProfileImage, chanegPassword, downloadMarksheetSample, downloadTraineeSampleFile, getProfileImage, getSelf, loginUser, signOut, toggleMail } from "../controllers/UserController.js";
 import { authMiddleware } from "../middlewares/authMiddleware.js";
 import { imageUpload } from "../middlewares/multerMiddleware.js";
 import { adminAuthMiddleware } from "../middlewares/adminAuthMiddleware.js";
@@ -21,5 +21,6 @@ userRouterv2.put("/profile/image", imageUpload.single('file'), addProfileImage);
 /** Admin only user route */
 userRouterv2.use(adminAuthMiddleware);
 userRouterv2.put("/admin/app-password", addAppPassword);
+userRouterv2.put("/admin/mails", toggleMail);
 
 export default userRouterv2;

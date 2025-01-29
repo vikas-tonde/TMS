@@ -63,6 +63,9 @@ class Mailer {
 
 export async function mailHandler(user, to, subject, text) {
   let mailer = new Mailer(user);
+  if (!user.mailsEnabled) {
+    return;
+  }
   mailer.createTransporter();
   await mailer.sendMail(to, subject, text);
 }

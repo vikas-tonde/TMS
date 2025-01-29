@@ -52,6 +52,7 @@ const loginUser = async (req, res) => {
       employeeId: true,
       password: true,
       profileImage: true,
+      mailsEnabled: true,
       role: {
         select: {
           name: true
@@ -241,10 +242,32 @@ const addAppPassword = async (req, res) => {
   }
 }
 
+const toggleMail = async (req, res) => {
+  let { mailsEnabled } = req.body;
+  if (mailsEnabled == null || mailsEnabled == undefined) {
+    logger.debug("Mails enabled value is not sent.");
+    return res.status(400).json(new ApiResponse(400, {}, "Mails enabled value is not sent."));
+  }
+  if (mailsEnabled == true) {
+    if((!req.user.appPassword) || !(await verifyPassword(req.user, req.user.appPassword))){
+      logger.debug("App password is not set.");
+      return res.status(400).json(new ApiResponse(400, {}, "App password is not set, set is first and then enable mails."));
+    }
+  }
+  let user = await prisma.user.update({
+    where: { employeeId: req.user.employeeId },
+    data: { mailsEnabled }
+  });
+  if (user) {
+    logger.audit(`Mail sending is ${mailsEnabled ? "enabled" : "disabled"} for ${user.firstName} ${user.lastName}`);
+    return res.status(200).json(new ApiResponse(200, { user }, `Mail sending is ${mailsEnabled ? "enabled" : "disabled"}`));
+  }
+  return res.status(500).json(new ApiResponse(500, {}, "Something went wrong while toggling mail."));
+}
 
 export {
   addProfileImage, chanegPassword,
   downloadMarksheetSample, downloadTraineeSampleFile, getProfileImage, getSelf,
-  loginUser, signOut, addAppPassword
+  loginUser, signOut, addAppPassword, toggleMail
 };
 

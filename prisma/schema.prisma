@@ -33,6 +33,7 @@ model User {
   locationId    Int
   joinedAt      DateTime?        @default(now())
   appPassword   String?
+  mailsEnabled  Boolean          @default(false)
   location      Location         @relation(fields: [locationId], references: [id], onDelete: Cascade)
   batches       UserBatch[]
   assessments   UserAssessment[]

@@ -393,10 +393,14 @@ const addRemark = async (req, res) => {
       return await tx.user.update({
         where: { employeeId: employeeId },
         data: {
-          remarks: { create: { value: remark, date: date, adminId:req.user.id } }
+          remarks: { create: { value: remark, date: date, adminId: req.user.id } }
         },
         include: {
-          remarks: true,
+          remarks: {
+            include: {
+              remarkedBy: true
+            },
+          },
           assessments: {
             include: {
               assessment: {
@@ -1034,7 +1038,7 @@ const updateUserDetails = async (req, res) => {
   try {
     let { employeeId } = req.params;
     let { firstName, lastName, isActive, location, role, email, batchIds, trainingIds } = req.body;
-    
+
     batchIds = batchIds?.map(batchId => BigInt(batchId));
     trainingIds = trainingIds?.map(trainingId => BigInt(trainingId));
 
@@ -1116,7 +1120,7 @@ const updateUserDetails = async (req, res) => {
       let existingTrainingIds = userTrainings.map(training => training.trainingId);
       let newTrainings = trainingIds?.filter(trainingId => !existingTrainingIds?.includes(trainingId)) || [];
       let removedTrainings = existingTrainingIds?.filter(trainingId => !trainingIds?.includes(trainingId)) || [];
-      
+
       if (newTrainings.length) {
         await tx.userTraining.createMany({
           data: newTrainings.map(trainingId => { return { userId: user.id, trainingId: trainingId } })
@@ -1134,7 +1138,7 @@ const updateUserDetails = async (req, res) => {
         data: newUser
       });
     });
-    
+
     if (savedUser) {
       logger.info(`User details of ${savedUser.employeeId} updated successfully.`);
       return res.status(200).json(new ApiResponse(200, savedUser, `User details of ${savedUser.employeeId} updated successfully.`));
