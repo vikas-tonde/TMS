@@ -46,10 +46,10 @@ const imageStorage = multer.diskStorage({
 function handleImageUploadError(err, req, res, next) {
   if (err) {
     if (err.code === 'LIMIT_FILE_SIZE') {
-      return res.status(400).json(new ApiResponse(200, { filename: req.file.filename }, "File is too large. Max file size is 1MB."));
+      return res.status(400).json(new ApiResponse(200, {}, "File is too large. Max file size is 1MB."));
     }
     logger.error('File upload error:', err);
-    return res.status(400).json(new ApiResponse(200, { filename: req.file.filename }, "An error occurred during file upload."));
+    return res.status(400).json(new ApiResponse(200, {}, "An error occurred during file upload."));
   }
 
   next();
