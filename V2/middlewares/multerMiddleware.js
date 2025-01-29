@@ -42,6 +42,18 @@ const imageStorage = multer.diskStorage({
   }
 });
 
+function handleImageUploadError(err, req, res, next) {
+  if (err) {
+    if (err.code === 'LIMIT_FILE_SIZE') {
+      return res.status(400).json({ error: 'File is too large. Max file size is 5MB.' });
+    }
+    logger.error('File upload error:', err);
+    return res.status(500).json({ error: 'An error occurred during file upload.' });
+  }
+
+  next();
+}
+
 const upload = multer({
   storage,
 });
@@ -52,5 +64,5 @@ const imageUpload = multer({
     fileSize: MAX_FILE_SIZE
   }
 });
-export { imageUpload, upload };
+export { imageUpload, upload, handleImageUploadError };
 
