@@ -1275,8 +1275,7 @@ const assignTraining = async (req, res) => {
     });
     let presentUserIds = userTrainings.map(user => user.userId);
     if (presentUserIds.length) {
-      let alreadyAssignedTrainings = userIds.filter(id => !presentUserIds.includes(BigInt(id)));
-      presentInDb = presentInDb.filter(user => alreadyAssignedTrainings.includes(user.id));
+      presentInDb = presentInDb.filter(user => presentUserIds.includes(user.id));
       presentInDb = presentInDb.map(user => user.employeeId);
       logger.warn(`${presentInDb.join(",")} are already assigned with training: [${training.trainingName}].`);
       return res.status(400).json(new ApiResponse(400, {}, `User(s): [${presentInDb.join(", ")}] are already assigned with training: [${training.trainingName}].`));
