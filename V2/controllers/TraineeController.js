@@ -85,11 +85,22 @@ const getQuizPercentage = async (req, res) => {
   }
 }
 
+const getTrainings = async (req, res) => {
+  try {
+    let trainings = await prisma.training.findMany({ where: { users: { every: { userId: req.user.id } } } });
+    return res.status(200).json(new ApiResponse(200, trainings, "Trainings fetched successfully."));
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json(new ApiResponse(500, {}, "Something went wrong fetching trainings."));
+  }
+}
+
 export {
   getExams,
   getBatches,
   getRemarks,
   getQuizCount,
+  getTrainings,
   getQuizPercentage
 };
 
