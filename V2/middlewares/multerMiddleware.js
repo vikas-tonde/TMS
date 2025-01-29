@@ -2,6 +2,7 @@ import multer from "multer";
 import path from 'path';
 import fs from 'fs';
 import logger from "../../utils/logger.js";
+import { ApiResponse } from "../../utils/ApiResponse.js";
 
 const MAX_FILE_SIZE = 1 * 1024 * 1024;
 
@@ -45,10 +46,10 @@ const imageStorage = multer.diskStorage({
 function handleImageUploadError(err, req, res, next) {
   if (err) {
     if (err.code === 'LIMIT_FILE_SIZE') {
-      return res.status(400).json({ error: 'File is too large. Max file size is 5MB.' });
+      return res.status(400).json(new ApiResponse(200, { filename: req.file.filename }, "File is too large. Max file size is 1MB."));
     }
     logger.error('File upload error:', err);
-    return res.status(500).json({ error: 'An error occurred during file upload.' });
+    return res.status(400).json(new ApiResponse(200, { filename: req.file.filename }, "An error occurred during file upload."));
   }
 
   next();
