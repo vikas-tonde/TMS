@@ -418,7 +418,7 @@ const addRemark = async (req, res) => {
       return res.status(404).json(new ApiResponse(404, {}, `Employee not found with ${employeeId}`));
     }
     mailHandler(req.user, foundUser.email, "New remark added", `Remark added for you by ${req.user.firstName} ${req.user.lastName} (${req.user.employeeId}).`);
-    return res.status(200).json(new ApiResponse(200, foundUser));
+    return res.status(200).json(new ApiResponse(200, foundUser, `Remark added for user: [${foundUser.employeeId}]`));
   } catch (e) {
     logger.error(e);
     return res.status(500).json(new ApiResponse(500, {}, "Something went wrong"));

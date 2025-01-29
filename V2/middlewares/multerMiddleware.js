@@ -3,6 +3,8 @@ import path from 'path';
 import fs from 'fs';
 import logger from "../../utils/logger.js";
 
+const MAX_FILE_SIZE = 1 * 1024 * 1024;
+
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     cb(null, process.env.FILE_UPLOAD_LOCATION)
@@ -43,8 +45,12 @@ const imageStorage = multer.diskStorage({
 const upload = multer({
   storage,
 });
+
 const imageUpload = multer({
   storage: imageStorage,
+  limits: {
+    fileSize: MAX_FILE_SIZE
+  }
 });
 export { imageUpload, upload };
 
