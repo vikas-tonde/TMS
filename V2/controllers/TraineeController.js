@@ -117,8 +117,7 @@ const getAssessmentCountByType = async (req, res) => {
     where ua."userId"=${req.user.id}
     group by a."assessmentType"
     `;
-    console.log("result", result);
-    return res.status(200).json(new ApiResponse(200, {result}, "Assessment count by type fetched."));
+    return res.status(200).json(new ApiResponse(200, result, "Assessment count by type fetched."));
   } catch (error) {
     logger.error("Error fetching assessment count by type:", error);
     return res.status(500).json(new ApiResponse(500, {}, "Something went wrong fetching assessment count by type."));
