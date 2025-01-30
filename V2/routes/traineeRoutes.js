@@ -1,5 +1,5 @@
 import express from "express";
-import { getBatches, getExams, getQuizCount, getQuizPercentage, getRemarks, getTrainingInProgressCount, getTrainings } from "../controllers/TraineeController.js";
+import { getAssessmentCountByType, getBatches, getExams, getQuizCount, getQuizPercentage, getRemarks, getTrainingInProgressCount, getTrainings } from "../controllers/TraineeController.js";
 import { authMiddleware } from "../middlewares/authMiddleware.js";
 import { traineeAuthMiddleware } from "../middlewares/traineeAuthMiddleware.js";
 
@@ -14,5 +14,6 @@ traineeRouterV2.get("/quiz/count", getQuizCount);
 traineeRouterV2.get("/quiz/percentage", getQuizPercentage);
 traineeRouterV2.get("/trainings", getTrainings);
 traineeRouterV2.get("/trainings/in-progress/count", getTrainingInProgressCount);
+traineeRouterV2.get("/assessments/count/by/type", getAssessmentCountByType);
 
 export default traineeRouterV2;
