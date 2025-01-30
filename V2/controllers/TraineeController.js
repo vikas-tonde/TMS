@@ -43,7 +43,7 @@ const getRemarks = async (req, res) => {
       where: { userId: req.user.id },
       orderBy: { date: "desc" }
     });
-    return res.status(200).json(new ApiResponse(200, remarks, "Remarks fetched successfully."));
+    return res.status(200).json(new ApiResponse(200, {remarks}, "Remarks fetched successfully."));
   } catch (error) {
     console.log(error);
     return res.status(500).json(new ApiResponse(500, {}, "Something went wrong fetching Remarks."));
@@ -95,12 +95,25 @@ const getTrainings = async (req, res) => {
   }
 }
 
+const getTrainingInProgressCount = async (req, res) => {
+  try {
+    let count = await prisma.userTraining.count({
+      where: { userId: req.user.id, isCompleted: false }
+    });
+    return res.status(200).json(new ApiResponse(200, {count}, "Training in progress fetched successfully."));
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json(new ApiResponse(500, {}, "Something went wrong fetching training in progress."));
+  }
+}
+
 export {
   getExams,
   getBatches,
   getRemarks,
   getQuizCount,
   getTrainings,
-  getQuizPercentage
+  getQuizPercentage,
+  getTrainingInProgressCount
 };
 
