@@ -88,11 +88,29 @@ const getQuizPercentage = async (req, res) => {
 
 const getTrainings = async (req, res) => {
   try {
-    let trainings = await prisma.training.findMany({ where: { users: { every: { userId: req.user.id } } } });
-    return res.status(200).json(new ApiResponse(200, trainings, "Trainings fetched successfully."));
+    let trainings = await prisma.userTraining.findMany({
+      where: {
+        userId: req.user.id,
+      },
+      select: {
+        training: {
+          select: {
+            trainingName: true,
+            duration: true
+          }
+        },
+        assignedDate: true,
+        isCompleted: true,
+        completionDate: true
+      }
+    });
+    if (trainings.length) {
+      return res.status(200).json(new ApiResponse(200, trainings, "Trainings are fetched successfully."));
+    }
+    return res.status(200).json(new ApiResponse(200, {}, "No ongoing training found."));
   } catch (error) {
     logger.error("Error fetching trainings:", error);
-    return res.status(500).json(new ApiResponse(500, {}, "Something went wrong fetching trainings."));
+    return res.status(500).json(new ApiResponse(500, {}, "Something went wrong while fetching ongoing trainings."));
   }
 }
 
@@ -144,11 +162,11 @@ const getOngoingTrainingOfUser = async (req, res) => {
       }
     });
     if (ongoingTrainings.length) {
-      return res.status(200).json(new ApiResponse(200, ongoingTrainings));
+      return res.status(200).json(new ApiResponse(200, ongoingTrainings, "Ongoing Trainings are fetched successfully."));
     }
     return res.status(200).json(new ApiResponse(200, {}, "No ongoing training found."));
   } catch (error) {
-    logger.error(error);
+    logger.error("Error fetching trainings:", error);
     return res.status(500).json(new ApiResponse(500, {}, "Something went wrong while fetching ongoing trainings."));
   }
 }
