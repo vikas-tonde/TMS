@@ -63,7 +63,7 @@ const getBatches = async (req, res) => {
 
 const getQuizCount = async (req, res) => {
   try {
-    let count = await prisma.userAssessment.count({ where: { userId: req.user.id, assessment: { assessmentType: "Quiz" } } });
+    let count = await prisma.userAssessment.count({ where: { userId: req.user.id } });
     return res.status(200).json(new ApiResponse(200, { count }, "Couts of quizes fetched."));
   } catch (error) {
     logger.error("Error fetching quiz count:", error);

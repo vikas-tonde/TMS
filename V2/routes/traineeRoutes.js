@@ -10,7 +10,7 @@ traineeRouterV2.use(traineeAuthMiddleware);
 traineeRouterV2.get("/exams/:batchId?", getExams);
 traineeRouterV2.get("/remarks", getRemarks);
 traineeRouterV2.get("/batches", getBatches);
-traineeRouterV2.get("/quiz/count", getQuizCount);
+traineeRouterV2.get("/assessments/count", getQuizCount);
 traineeRouterV2.get("/quiz/percentage", getQuizPercentage);
 traineeRouterV2.get("/trainings", getTrainings);
 traineeRouterV2.get("/trainings/in-progress/count", getTrainingInProgressCount);
