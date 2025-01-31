@@ -126,17 +126,9 @@ const getAssessmentCountByType = async (req, res) => {
 
 const getOngoingTrainingOfUser = async (req, res) => {
   try {
-    let { employeeId } = req.params;
-    let user = await prisma.user.findUnique({
-      where: { employeeId: String(employeeId) },
-      select: { id: true }
-    });
-    if (!user) {
-      return res.status(404).json(new ApiResponse(404, {}, "User not found."));
-    }
     let ongoingTrainings = await prisma.userTraining.findMany({
       where: {
-        userId: user.id,
+        userId: req.user.id,
         isCompleted: false
       },
       select: {

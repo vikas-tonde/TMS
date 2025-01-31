@@ -15,6 +15,6 @@ traineeRouterV2.get("/quiz/percentage", getQuizPercentage);
 traineeRouterV2.get("/trainings", getTrainings);
 traineeRouterV2.get("/trainings/in-progress/count", getTrainingInProgressCount);
 traineeRouterV2.get("/assessments/count/by/type", getAssessmentCountByType);
-traineeRouterV2.get("/user/ongoing-training/:employeeId", getOngoingTrainingOfUser);
+traineeRouterV2.get("/user/ongoing-training", getOngoingTrainingOfUser);
 
 export default traineeRouterV2;
