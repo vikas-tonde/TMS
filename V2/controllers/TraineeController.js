@@ -44,7 +44,7 @@ const getRemarks = async (req, res) => {
       where: { userId: req.user.id },
       orderBy: { date: "desc" }
     });
-    return res.status(200).json(new ApiResponse(200, {remarks}, "Remarks fetched successfully."));
+    return res.status(200).json(new ApiResponse(200, { remarks }, "Remarks fetched successfully."));
   } catch (error) {
     logger.error("Error fetching remarks:", error);
     return res.status(500).json(new ApiResponse(500, {}, "Something went wrong fetching Remarks."));
@@ -101,7 +101,7 @@ const getTrainingInProgressCount = async (req, res) => {
     let count = await prisma.userTraining.count({
       where: { userId: req.user.id, isCompleted: false }
     });
-    return res.status(200).json(new ApiResponse(200, {count}, "Training in progress fetched successfully."));
+    return res.status(200).json(new ApiResponse(200, { count }, "Training in progress fetched successfully."));
   } catch (error) {
     logger.error("Error fetching in progress training count:", error);
     return res.status(500).json(new ApiResponse(500, {}, "Something went wrong fetching training in progress."));
@@ -124,6 +124,43 @@ const getAssessmentCountByType = async (req, res) => {
   }
 }
 
+const getOngoingTrainingOfUser = async (req, res) => {
+  try {
+    let { employeeId } = req.params;
+    let user = await prisma.user.findUnique({
+      where: { employeeId: String(employeeId) },
+      select: { id: true }
+    });
+    if (!user) {
+      return res.status(404).json(new ApiResponse(404, {}, "User not found."));
+    }
+    let ongoingTrainings = await prisma.userTraining.findMany({
+      where: {
+        userId: user.id,
+        isCompleted: false
+      },
+      select: {
+        training: {
+          select: {
+            trainingName: true,
+            duration: true
+          }
+        },
+        assignedDate: true,
+        isCompleted: true,
+        completionDate: true
+      }
+    });
+    if (ongoingTrainings.length) {
+      return res.status(200).json(new ApiResponse(200, ongoingTrainings));
+    }
+    return res.status(200).json(new ApiResponse(200, {}, "No ongoing training found."));
+  } catch (error) {
+    logger.error(error);
+    return res.status(500).json(new ApiResponse(500, {}, "Something went wrong while fetching ongoing trainings."));
+  }
+}
+
 export {
   getExams,
   getBatches,
@@ -131,6 +168,7 @@ export {
   getQuizCount,
   getTrainings,
   getQuizPercentage,
+  getOngoingTrainingOfUser,
   getAssessmentCountByType,
   getTrainingInProgressCount,
 };
