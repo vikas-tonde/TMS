@@ -25,6 +25,13 @@ export const authMiddleware = async (req, res, next) => {
         profileImage: true,
         appPassword: true,
         mailsEnabled: true,
+        location: true,
+        skills: {
+          select:{
+            skill: true,
+          }
+        },
+        languages: true,
         role: {
           select: {
             name: true

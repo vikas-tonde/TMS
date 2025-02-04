@@ -40,6 +40,8 @@ model User {
   remarks       Remark[]         @relation(name: "remarksOfUser")
   remarkedUsers Remark[]         @relation(name: "remarksByAdmin")
   trainings     UserTraining[]
+  skills        UserSkills[]     
+  languages     UserLanguages[] 
 }
 
 model Remark {
@@ -138,4 +140,34 @@ model UserTraining {
   training       Training  @relation(fields: [trainingId], references: [id], onDelete: Cascade)
 
   @@unique([trainingId, userId])
+}
+
+model Language {
+  id BigInt @id @default(autoincrement())
+  languageName String
+  languages UserLanguages[]
+}
+
+model Skill {
+  id BigInt @id @default(autoincrement())
+  skillName String
+  users UserSkills[]
+}
+
+model UserSkills {
+  userId  BigInt
+  skillId BigInt
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  skill Skill @relation(fields: [skillId], references: [id], onDelete: Cascade)
+
+  @@unique([skillId, userId])
+}
+
+model UserLanguages {
+  userId  BigInt
+  languageId BigInt
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  language Language @relation(fields: [languageId], references: [id], onDelete: Cascade)
+
+  @@unique([languageId, userId])
 }
