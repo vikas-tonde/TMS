@@ -143,47 +143,102 @@ const addOrDeleteSkillsAndLanguages = async (req, res) => {
   try {
     const { languages, skills } = req.body;
 
-    if (!Array.isArray(languages) || !Array.isArray(skills)) {
-      return res.status(400).json(new ApiResponse(400, {}, "Languages and skills must be arrays"));
-    }
+    let languageIds = languages?.filter(language => !language.__isNew__).map(language => BigInt(language.value));
+    let skillIds = skills?.filter(skill => !skill.__isNew__).map(skill => BigInt(skill.value));
 
-    let user = await prisma.user.findUnique({ where: { userId: req.user.id } });
-    console.log(user);
-    
+    let newLanguages = languages?.filter(language => language.__isNew__).map(language => language.label) || [];
+    let newSkills = skills?.filter(skill => skill.__isNew__).map(skill => skill.label) || [];
+
+    let user = await prisma.user.findUnique({ where: { id: req.user.id } });
+
     if (!user) {
       return res.status(400).json(new ApiResponse(400, {}, "User does not exist in system."));
     }
 
-    // 3. Process the addition of new languages and skills
-    const languagesToAdd = languages.filter(lang => !user.languages.includes(lang)); // Filter out languages already in the user's profile
-    const skillsToAdd = skills.filter(skill => !user.skills.includes(skill)); // Filter out skills already in the user's profile
-
-    // 4. Add new languages and skills
-    if (languagesToAdd.length > 0) {
-      user.languages.push(...languagesToAdd);
-    }
-    if (skillsToAdd.length > 0) {
-      user.skills.push(...skillsToAdd);
+    if (languageIds && languageIds.length > 0) {
+      let languages = await prisma.language.findMany({ where: { id: { in: languageIds } } });
+      if (languages.length !== languageIds.length) {
+        return res.status(400).json(new ApiResponse(400, {}, "One or more language ids are invalid."));
+      }
     }
 
-    // 5. Process the deletion of unwanted languages and skills
-    const languagesToDelete = user.languages.filter(lang => !languages.includes(lang)); // Get languages to be removed
-    const skillsToDelete = user.skills.filter(skill => !skills.includes(skill)); // Get skills to be removed
+    if (skillIds && skillIds.length > 0) {
+      let skills = await prisma.skill.findMany({ where: { id: { in: skillIds } } });
+      if (skills.length !== skillIds.length) {
+        return res.status(400).json(new ApiResponse(400, {}, "One or more skill ids are invalid."));
+      }
+    }
 
-    // 6. Remove the languages and skills that are no longer selected
-    user.languages = user.languages.filter(lang => !languagesToDelete.includes(lang));
-    user.skills = user.skills.filter(skill => !skillsToDelete.includes(skill));
+    if (newLanguages.length > 0) {
+      let createdLanguages = await Promise.all(
+        newLanguages.map(async label => {
+          return await prisma.language.create({
+            data: { languageName: label }
+          });
+        })
+      );
 
-    // 7. Save the updated user profile
-    await user.save();
+      createdLanguages.forEach(language => {
+        languageIds.push(language.id);
+      });
+    }
 
-    // 8. Return success response
+    if (newSkills.length > 0) {
+      let createdSkills = await Promise.all(
+        newSkills.map(async label => {
+          return await prisma.skill.create({
+            data: { skillName: label }
+          });
+        })
+      );
+
+      createdSkills.forEach(skill => {
+        skillIds.push(skill.id);
+      });
+    }
+
+    let savedUser = await prisma.$transaction(async tx => {
+      let userLanguages = await tx.userLanguages.findMany({ where: { userId: user.id } });
+      let existingLanguageIds = userLanguages.map(language => language.languageId);
+      let newLanguages = languageIds?.filter(languageId => !existingLanguageIds.includes(languageId)) || [];
+      let removedLanguages = existingLanguageIds?.filter(languageId => !languageIds?.includes(languageId)) || [];
+
+      if (newLanguages.length) {
+        await tx.userLanguages.createMany({
+          data: newLanguages.map(languageId => ({ userId: user.id, languageId }))
+        });
+      }
+
+      if (removedLanguages.length) {
+        await tx.userLanguages.deleteMany({
+          where: { userId: user.id, languageId: { in: removedLanguages } }
+        });
+      }
+
+      let userSkills = await tx.userSkills.findMany({ where: { userId: user.id } });
+      let existingSkillIds = userSkills.map(skill => skill.skillId);
+      let newSkills = skillIds.filter(skillId => !existingSkillIds.includes(skillId)) || [];
+      let removedSkills = existingSkillIds.filter(skillId => !skillIds.includes(skillId)) || [];
+
+      if (newSkills.length) {
+        await tx.userSkills.createMany({
+          data: newSkills.map(skillId => ({ userId: user.id, skillId }))
+        });
+      }
+
+      if (removedSkills.length) {
+        await tx.userSkills.deleteMany({
+          where: { userId: user.id, skillId: { in: removedSkills } }
+        });
+      }
+    });
+
     return res.status(200).json(new ApiResponse(200, user, "Skills and Languages updated successfully."));
   } catch (error) {
     logger.error("Error while updating skills and languages:", error);
     return res.status(500).json(new ApiResponse(500, {}, "Something went wrong while updating skills and languages."));
   }
-}
+};
 
 const getAssessmentCountByType = async (req, res) => {
   try {
@@ -233,4 +288,3 @@ const getOngoingTrainingOfUser = async (req, res) => {
 export {
   getAssessmentCountByType, getBatches, getExams, getOngoingTrainingOfUser, addOrDeleteSkillsAndLanguages, getSkillsAndLanguages, getQuizCount, getQuizPercentage, getRemarks, getTrainingInProgressCount, getTrainings
 };
-

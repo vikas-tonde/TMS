@@ -53,6 +53,27 @@ const loginUser = async (req, res) => {
       password: true,
       profileImage: true,
       mailsEnabled: true,
+      location: true,
+      skills: {
+        select: {
+          skill: {
+            select: {
+              skillName: true,
+              id: true
+            }
+          }
+        }
+      },
+      languages: {
+        select: {
+          language: {
+            select: {
+              languageName: true,
+              id: true
+            }
+          }
+        }
+      },
       role: {
         select: {
           name: true
@@ -223,7 +244,7 @@ const addAppPassword = async (req, res) => {
   }
   try {
     let encryptedPassword = encrypt(appPassword, employeeId);
-    if(!(await verifyPassword(req.user, encryptedPassword))){
+    if (!(await verifyPassword(req.user, encryptedPassword))) {
       logger.debug("App password verification failed.");
       return res.status(400).json(new ApiResponse(400, {}, "App password verification failed, please check your app password once."));
     }
@@ -249,7 +270,7 @@ const toggleMail = async (req, res) => {
     return res.status(400).json(new ApiResponse(400, {}, "Mails enabled value is not sent."));
   }
   if (mailsEnabled == true) {
-    if((!req.user.appPassword) || !(await verifyPassword(req.user, req.user.appPassword))){
+    if ((!req.user.appPassword) || !(await verifyPassword(req.user, req.user.appPassword))) {
       logger.debug("App password is not set.");
       return res.status(400).json(new ApiResponse(400, {}, "App password is not set, set is first and then enable mails."));
     }
