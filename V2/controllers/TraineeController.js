@@ -61,6 +61,22 @@ const getBatches = async (req, res) => {
   }
 }
 
+const getSkillsAndLanguages = async (req, res) => {
+  try {
+    let skills = await prisma.skill.findMany({});
+    let languages = await prisma.language.findMany({});
+
+    const extractedSkills = skills.map(skill => skill.skillName);
+    const extractedLanguages = languages.map(language => language.languageName);
+    const SkillsAndLanguages = { skills: extractedSkills, languages: extractedLanguages };
+
+    return res.status(200).json(new ApiResponse(200, SkillsAndLanguages, "Skills and Languages are fetched successfully."));
+  } catch (error) {
+    logger.error("Error fetching skills and languages: ", error);
+    return res.status(500).json(new ApiResponse(500, {}, "Something went wrong while fetching Skills and Languages."));
+  }
+};
+
 const getQuizCount = async (req, res) => {
   try {
     let count = await prisma.userAssessment.count({ where: { userId: req.user.id } });
@@ -172,14 +188,6 @@ const getOngoingTrainingOfUser = async (req, res) => {
 }
 
 export {
-  getExams,
-  getBatches,
-  getRemarks,
-  getQuizCount,
-  getTrainings,
-  getQuizPercentage,
-  getOngoingTrainingOfUser,
-  getAssessmentCountByType,
-  getTrainingInProgressCount,
+  getAssessmentCountByType, getBatches, getExams, getOngoingTrainingOfUser, getSkillsAndLanguages, getQuizCount, getQuizPercentage, getRemarks, getTrainingInProgressCount, getTrainings
 };
 

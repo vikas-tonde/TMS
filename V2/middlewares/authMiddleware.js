@@ -27,11 +27,23 @@ export const authMiddleware = async (req, res, next) => {
         mailsEnabled: true,
         location: true,
         skills: {
-          select:{
-            skill: true,
+          select: {
+            skill: {
+              select: {
+                skillName: true,
+              }
+            }
           }
         },
-        languages: true,
+        languages: {
+          select: {
+            language: {
+              select: {
+                languageName: true,
+              }
+            }
+          }
+        },
         role: {
           select: {
             name: true
