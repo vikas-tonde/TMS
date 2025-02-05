@@ -264,6 +264,24 @@ const getTraineeDetails = async (req, res) => {
           firstName: true,
           lastName: true,
           id: true,
+          skills: {
+            select: {
+              skill: {
+                select: {
+                  skillName: true
+                }
+              }
+            }
+          },
+          languages: {
+            select: {
+              language: {
+                select: {
+                  languageName: true
+                }
+              }
+            }
+          },
           remarks: {
             include: {
               remarkedBy: true
