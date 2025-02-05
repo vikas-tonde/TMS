@@ -142,6 +142,52 @@ const getTrainingInProgressCount = async (req, res) => {
   }
 }
 
+const addOrDeleteSkillsAndLanguages = async (req, res) => {
+  try {
+    const { languages, skills } = req.body;
+
+    if (!Array.isArray(languages) || !Array.isArray(skills)) {
+      return res.status(400).json(new ApiResponse(400, {}, "Languages and skills must be arrays"));
+    }
+
+    let user = await prisma.user.findUnique({ where: { userId: req.user.id } });
+    console.log(user);
+    
+    if (!user) {
+      return res.status(400).json(new ApiResponse(400, {}, "User does not exist in system."));
+    }
+
+    // 3. Process the addition of new languages and skills
+    const languagesToAdd = languages.filter(lang => !user.languages.includes(lang)); // Filter out languages already in the user's profile
+    const skillsToAdd = skills.filter(skill => !user.skills.includes(skill)); // Filter out skills already in the user's profile
+
+    // 4. Add new languages and skills
+    if (languagesToAdd.length > 0) {
+      user.languages.push(...languagesToAdd);
+    }
+    if (skillsToAdd.length > 0) {
+      user.skills.push(...skillsToAdd);
+    }
+
+    // 5. Process the deletion of unwanted languages and skills
+    const languagesToDelete = user.languages.filter(lang => !languages.includes(lang)); // Get languages to be removed
+    const skillsToDelete = user.skills.filter(skill => !skills.includes(skill)); // Get skills to be removed
+
+    // 6. Remove the languages and skills that are no longer selected
+    user.languages = user.languages.filter(lang => !languagesToDelete.includes(lang));
+    user.skills = user.skills.filter(skill => !skillsToDelete.includes(skill));
+
+    // 7. Save the updated user profile
+    await user.save();
+
+    // 8. Return success response
+    return res.status(200).json(new ApiResponse(200, user, "Skills and Languages updated successfully."));
+  } catch (error) {
+    logger.error("Error while updating skills and languages:", error);
+    return res.status(500).json(new ApiResponse(500, {}, "Something went wrong while updating skills and languages."));
+  }
+}
+
 const getAssessmentCountByType = async (req, res) => {
   try {
     let result = await prisma.$queryRaw`
@@ -188,6 +234,6 @@ const getOngoingTrainingOfUser = async (req, res) => {
 }
 
 export {
-  getAssessmentCountByType, getBatches, getExams, getOngoingTrainingOfUser, getSkillsAndLanguages, getQuizCount, getQuizPercentage, getRemarks, getTrainingInProgressCount, getTrainings
+  getAssessmentCountByType, getBatches, getExams, getOngoingTrainingOfUser, addOrDeleteSkillsAndLanguages, getSkillsAndLanguages, getQuizCount, getQuizPercentage, getRemarks, getTrainingInProgressCount, getTrainings
 };
 

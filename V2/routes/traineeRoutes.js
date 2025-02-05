@@ -1,5 +1,5 @@
 import express from "express";
-import { getAssessmentCountByType, getBatches, getExams, getOngoingTrainingOfUser, getQuizCount, getQuizPercentage, getRemarks, getSkillsAndLanguages, getTrainingInProgressCount, getTrainings } from "../controllers/TraineeController.js";
+import { addOrDeleteSkillsAndLanguages, getAssessmentCountByType, getBatches, getExams, getOngoingTrainingOfUser, getQuizCount, getQuizPercentage, getRemarks, getSkillsAndLanguages, getTrainingInProgressCount, getTrainings } from "../controllers/TraineeController.js";
 import { authMiddleware } from "../middlewares/authMiddleware.js";
 import { traineeAuthMiddleware } from "../middlewares/traineeAuthMiddleware.js";
 
@@ -17,5 +17,6 @@ traineeRouterV2.get("/all/skills-languages", getSkillsAndLanguages);
 traineeRouterV2.get("/trainings/in-progress/count", getTrainingInProgressCount);
 traineeRouterV2.get("/assessments/count/by/type", getAssessmentCountByType);
 traineeRouterV2.get("/user/ongoing-training", getOngoingTrainingOfUser);
+traineeRouterV2.post("/add-delete/skills-languages", addOrDeleteSkillsAndLanguages);
 
 export default traineeRouterV2;

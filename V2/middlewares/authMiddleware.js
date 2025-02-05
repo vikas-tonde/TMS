@@ -31,6 +31,7 @@ export const authMiddleware = async (req, res, next) => {
             skill: {
               select: {
                 skillName: true,
+                id: true
               }
             }
           }
@@ -40,6 +41,7 @@ export const authMiddleware = async (req, res, next) => {
             language: {
               select: {
                 languageName: true,
+                id: true
               }
             }
           }
