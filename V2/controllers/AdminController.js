@@ -285,7 +285,8 @@ const getTraineeDetails = async (req, res) => {
           remarks: {
             include: {
               remarkedBy: true
-            }
+            },
+            orderBy: { date: "desc" },
           },
           joinedAt: true,
           trainings: {
