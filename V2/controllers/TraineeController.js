@@ -95,6 +95,27 @@ const getQuizCount = async (req, res) => {
   }
 }
 
+const getAssessmentByModules = async (req, res) => {
+  try {
+    let assessment = await prisma.userAssessment.findMany({ 
+      where: { userId: req.user.id },
+      select:{
+        marksObtained: true,
+        assessment: {
+          select: {
+            totalMarks: true,
+            module: true
+          }
+        }
+      }
+     });
+    return res.status(200).json(new ApiResponse(200, { assessment }, "Assessment details are fetched."));
+  } catch (error) {
+    logger.error("Error fetching Assessment details:", error);
+    return res.status(500).json(new ApiResponse(500, {}, "Something went wrong fetching Assessment details."));
+  }
+}
+
 const getQuizPercentage = async (req, res) => {
   try {
     let result = await prisma.$queryRaw`
@@ -297,5 +318,5 @@ const getOngoingTrainingOfUser = async (req, res) => {
 }
 
 export {
-  getAssessmentCountByType, getBatches, getExams, getOngoingTrainingOfUser, addOrDeleteSkillsAndLanguages, getSkillsAndLanguages, getQuizCount, getQuizPercentage, getRemarks, getTrainingInProgressCount, getTrainings
+  getAssessmentCountByType, getBatches, getExams, getOngoingTrainingOfUser, addOrDeleteSkillsAndLanguages, getAssessmentByModules, getSkillsAndLanguages, getQuizCount, getQuizPercentage, getRemarks, getTrainingInProgressCount, getTrainings
 };
