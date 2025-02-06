@@ -42,8 +42,19 @@ const getRemarks = async (req, res) => {
   try {
     let remarks = await prisma.remark.findMany({
       where: { userId: req.user.id },
-      orderBy: { date: "desc" }
+      orderBy: { date: "desc" },
+      select: {
+        value: true,
+        date: true,
+        remarkedBy: {
+          select: {
+            firstName: true,
+            lastName: true
+          }
+        }
+      }
     });
+
     return res.status(200).json(new ApiResponse(200, { remarks }, "Remarks fetched successfully."));
   } catch (error) {
     logger.error("Error fetching remarks:", error);
