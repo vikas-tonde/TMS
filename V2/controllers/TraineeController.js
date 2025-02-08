@@ -104,7 +104,9 @@ const getAssessmentByModules = async (req, res) => {
         assessment: {
           select: {
             totalMarks: true,
-            module: true
+            module: true,
+            assessmentType: true,
+            date: true
           }
         }
       }
