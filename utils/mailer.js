@@ -41,12 +41,14 @@ class Mailer {
     });
   }
 
-  async sendMail(to, subject, text) {
+  async sendMail(to, adminsCC, subject, text) {
     if (await this.verify()) {
       try {
+        const ccEmails = adminsCC.filter(admin => admin.email !== this.user.email).map(admin => admin.email).join(', ');
         const mailOptions = {
           from: this.user.email,
           to: to,
+          cc: ccEmails,
           subject: subject,
           text: text
         };
@@ -61,13 +63,13 @@ class Mailer {
   }
 }
 
-export async function mailHandler(user, to, subject, text) {
+export async function mailHandler(user, to, adminsCC, subject, text) {
   let mailer = new Mailer(user);
   if (!user.mailsEnabled) {
     return;
   }
   mailer.createTransporter();
-  await mailer.sendMail(to, subject, text);
+  await mailer.sendMail(to, adminsCC, subject, text);
 }
 
 export async function verifyPassword(user, password) {

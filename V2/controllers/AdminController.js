@@ -420,6 +420,7 @@ const addRemark = async (req, res) => {
               remarkedBy: true
             },
           },
+          location: true,
           assessments: {
             include: {
               assessment: {
@@ -436,7 +437,9 @@ const addRemark = async (req, res) => {
       logger.warn(`Employee not found with ${employeeId}`);
       return res.status(404).json(new ApiResponse(404, {}, `Employee not found with ${employeeId}`));
     }
-    mailHandler(req.user, foundUser.email, "New remark added", `Remark added for you by ${req.user.firstName} ${req.user.lastName} (${req.user.employeeId}).`);
+
+    let adminsEmails = await prisma.user.findMany({ where: { userRole: 1, location: foundUser.location }, select: { email: true }});
+    mailHandler(req.user, foundUser.email, adminsEmails, "New remark added", `Remark added for you by ${req.user.firstName} ${req.user.lastName} (${req.user.employeeId}).`);
     return res.status(200).json(new ApiResponse(200, foundUser, `Remark added for user: [${foundUser.employeeId}]`));
   } catch (e) {
     logger.error(e);
